@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full bg-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>นักล่ายูนิฟอร์ม POS & Stock</title>
+  
+  <meta name="theme-color" content="#f97316">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="นักล่ายูนิฟอร์ม">
+  <link id="manifest-link" rel="manifest">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Google Fonts: Prompt & Kanit for modern Thai UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Prompt', 'Kanit', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              300: '#fdba74',
+              400: '#fb923c',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+              800: '#9a3412',
+              900: '#7c2d12',
+            }
+          },
+          boxShadow: {
+            'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.02)',
+            'floating': '0 12px 30px -4px rgba(249, 115, 22, 0.25)',
+            'card': '0 2px 8px rgba(15, 23, 42, 0.06)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom scrollbars for mobile feel */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Touch highlight & safe area support */
+    * { -webkit-tap-highlight-color: transparent; }
+    body {
+      padding-bottom: env(safe-area-inset-bottom, 80px);
+      user-select: none;
+    }
+
+    /* Glassmorphism utility */
+    .glass-header {
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.96) 0%, rgba(234, 88, 12, 0.98) 100%);
+      backdrop-filter: blur(12px);
+    }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+    }
+
+    /* Active animations */
+    .btn-press:active { transform: scale(0.96); }
+    .card-touch:active { transform: scale(0.98); }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .animate-slide-up { animation: slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  </style>
+<style id="v4-mobile-fix">
+html,body{overscroll-behavior-y:contain}button,input,select,textarea{touch-action:manipulation}button{min-height:40px}input,select,textarea{font-size:16px!important}#v4Bell{bottom:88px;top:auto} @media(min-width:640px){#v4Bell{top:80px;bottom:auto}}
+.compact-mode main{padding:.5rem;gap:.5rem}.compact-mode button{min-height:34px}.compact-mode #cartItems>div{padding:.4rem}
+</style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-full flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+  <div id="toastContainer" class="fixed top-4 left-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none max-w-md mx-auto"></div>
+
+  <header class="glass-header text-white sticky top-0 z-30 shadow-md px-4 py-3 flex justify-between items-center transition-all duration-200">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-inner border border-white/30 text-xl font-black">
+        <i class="fa-solid font-black fa-utensils"></i>
+      </div>
+      <div>
+        <div class="font-bold text-base leading-tight tracking-wide flex items-center gap-1.5" id="headerStoreName">
+          นักล่ายูนิฟอร์ม POS
+        </div>
+        <div class="text-[10px] text-orange-100 font-normal opacity-90 flex items-center gap-1">
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          ระบบจัดการหน้าร้าน & บัญชี 50/50
+        </div>
+      </div>
+    </div>
+    
+    <button onclick="toggleRole()" id="displayRoleBadge" class="btn-press bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-semibold px-3 py-1.5 rounded-full border border-white/30 shadow-sm flex items-center gap-1.5 transition-all">
+      <i class="fa-solid fa-crown text-amber-300"></i>
+      <span>เจ้าของร้าน</span>
+    </button>
+  </header>
+
+  <main class="flex-1 max-w-md w-full mx-auto p-3 space-y-3 pb-24">
+
+    <section id="tabOrder" class="space-y-3">
+      
+      <!-- Order Type Switcher -->
+      <div class="bg-white p-1.5 rounded-2xl shadow-card border border-slate-200/80 flex gap-1">
+        <button onclick="setOrderType('takeout')" id="btnTypeTakeout" class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 bg-brand-500 text-white shadow-sm shadow-brand-500/30">
+          <i class="fa-solid fa-bag-shopping text-sm"></i>
+          <span>🍱 กลับบ้าน (คิว)</span>
+        </button>
+        <button onclick="setOrderType('eatin')" id="btnTypeEatin" class="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-all duration-200 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-utensils text-sm"></i>
+          <span>🍽️ ทานที่ร้าน / โต๊ะ</span>
+        </button>
+      </div>
+
+      <!-- Table Input (Hidden by default for Takeout) -->
+      <div id="tableInputBox" class="hidden bg-amber-50 p-3 rounded-2xl border border-amber-200/80 shadow-sm transition-all">
+        <label class="block text-[11px] font-semibold text-amber-800 mb-1 flex items-center gap-1">
+          <i class="fa-solid fa-location-dot text-amber-600"></i> ระบุหมายเลขโต๊ะ / สถานที่จัดส่ง:
+        </label>
+        <input type="text" id="orderTableNo" class="w-full bg-white px-3.5 py-2 rounded-xl text-xs border border-amber-300 focus:ring-2 focus:ring-brand-500 focus:outline-none font-medium shadow-sm" placeholder="เช่น โต๊ะ 1, หน้าร้าน, จุดรับสินค้า A">
+      </div>
+
+      <!-- Menu Grid Card -->
+      <div class="bg-white p-3.5 rounded-2xl shadow-card border border-slate-200/80 space-y-3">
+        <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+          <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-burger text-brand-500"></i> เลือกรายการอาหาร
+          </span>
+          <span class="text-[10px] bg-orange-100 text-brand-700 px-2 py-0.5 rounded-full font-semibold">
+            แตะเพื่อเพิ่มในตะกร้า
+          </span>
+        </div>
+
+        <!-- Menu Grid -->
+        <div class="grid grid-cols-2 gap-2.5" id="menuList"></div>
+
+        <!-- Sauces Selector -->
+        <div class="pt-2 border-t border-slate-100">
+          <div class="text-[11px] font-bold text-slate-700 mb-2 flex justify-between items-center">
+            <span class="flex items-center gap-1"><i class="fa-solid fa-wine-bottle text-amber-500"></i> ซอสราดประจำเมนู</span>
+            <span class="text-[10px] text-slate-400 font-normal">(สูงสุด 2 ชนิด)</span>
+          </div>
+          <div class="flex flex-wrap gap-1.5 no-scrollbar overflow-x-auto py-0.5" id="sauceList"></div>
+        </div>
+
+        <!-- Toppings Selector -->
+        <div class="pt-2 border-t border-slate-100">
+          <div class="text-[11px] font-bold text-slate-700 mb-2 flex items-center gap-1">
+            <i class="fa-solid fa-cheese text-amber-500"></i> ท็อปปิ้ง / ตัวเลือกเสริม
+          </div>
+          <div class="flex flex-wrap gap-1.5" id="toppingList"></div>
+        </div>
+      </div>
+
+      <!-- Shopping Cart Sheet/Card -->
+      <div class="bg-white p-3.5 rounded-2xl shadow-card border border-slate-200/80 space-y-3">
+        <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+          <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-cart-shopping text-brand-500"></i> ตะกร้าสั่งซื้อ
+          </span>
+          <button onclick="clearCart()" class="text-[11px] text-rose-500 hover:text-rose-600 font-semibold flex items-center gap-1 btn-press">
+            <i class="fa-solid fa-trash-can"></i> ล้างตะกร้า
+          </button>
+        </div>
+
+        <!-- Cart Items List -->
+        <div class="max-h-48 overflow-y-auto space-y-2 pr-1" id="cartItems"></div>
+
+        <!-- Order Note -->
+        <div>
+          <input type="text" id="orderNote" class="w-full bg-slate-50 px-3 py-2 rounded-xl text-xs border border-slate-200 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all placeholder:text-slate-400" placeholder="✏️ หมายเหตุเพิ่มเติม (เช่น ไม่เผ็ด, แยกซอส)...">
+        </div>
+
+        <!-- Cart Summary & Actions -->
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+          <div>
+            <div class="text-[10px] font-medium text-slate-400">ราคารวมทั้งสิ้น</div>
+            <div id="cartTotal" class="text-xl font-black text-brand-500 leading-tight">0 บาท</div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="holdOrder()" class="btn-press bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2.5 rounded-xl border border-slate-200 flex items-center gap-1.5">
+              <i class="fa-solid fa-circle-pause text-amber-500"></i> พักบิล
+            </button>
+            <button onclick="checkout()" class="btn-press bg-gradient-to-r from-brand-500 to-amber-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-floating flex items-center gap-2">
+              <i class="fa-solid fa-cash-register"></i> รับเงิน
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tabHeld" class="hidden space-y-3">
+      <div class="bg-white p-3.5 rounded-2xl shadow-card border border-slate-200/80 space-y-3">
+        <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+          <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-clock-rotate-left text-amber-500"></i> รายการบิลที่พักไว้ (ค้างชำระ)
+          </span>
+        </div>
+        <div id="heldOrdersList" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <section id="tabKitchen" class="hidden space-y-3">
+      <!-- Sub Tab Switcher -->
+      <div class="bg-white p-1 rounded-2xl shadow-card border border-slate-200/80 flex gap-1">
+        <button onclick="switchKitchenSubTab('tickets')" id="subTabTicketsBtn" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-brand-500 text-white shadow-sm transition-all flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-ticket"></i> บัตรคิวรายออเดอร์
+        </button>
+        <button onclick="switchKitchenSubTab('summary')" id="subTabSummaryBtn" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-all flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-chart-pie"></i> สรุปเมนูค้างทำ
+        </button>
+      </div>
+
+      <!-- Tickets View -->
+      <div id="kitchenTicketsView" class="space-y-2">
+        <div id="kitchenTicketsContainer" class="space-y-2.5"></div>
+      </div>
+
+      <!-- Batch Summary View -->
+      <div id="kitchenSummaryView" class="hidden">
+        <div class="bg-white p-3.5 rounded-2xl shadow-card border border-slate-200/80 space-y-2">
+          <div class="text-xs font-bold text-slate-800 pb-2 border-b border-slate-100 flex items-center gap-1.5">
+            <i class="fa-solid fa-list-check text-brand-500"></i> รายการอาหารค้างทำทั้งหมด (Batch Summary)
+          </div>
+          <div id="kitchenSummaryContainer" class="space-y-1.5"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tabStock" class="hidden space-y-3">
+      <!-- Quick Buy Banner Card -->
+      <div class="bg-gradient-to-br from-emerald-500 to-teal-600 p-4 rounded-2xl shadow-md text-white space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-cart-flatbed"></i> ซื้อของสดเข้าคลังวันต่อวัน
+          </span>
+          <span class="bg-white/20 backdrop-blur-md text-[10px] px-2 py-0.5 rounded-full font-medium">ตัดเงินสดทันที</span>
+        </div>
+        <p class="text-[11px] text-emerald-100 leading-relaxed">
+          บันทึกการซื้อวัตถุดิบหน้าร้านด้วยเงินหมุนเวียน ระบบจะเพิ่มสต็อคและหักเงินสดในลิ้นชักให้อัตโนมัติ
+        </p>
+        <button onclick="openQuickDailyBuyModal()" class="w-full btn-press bg-white text-emerald-700 hover:bg-emerald-50 text-xs font-bold py-2.5 rounded-xl shadow-sm flex items-center justify-center gap-2 transition-all">
+          <i class="fa-solid fa-plus-circle"></i> ซื้อวัตถุดิบสดเข้าคลัง (หักเงินสด)
+        </button>
+      </div>
+
+      <!-- Inventory Stock -->
+      <div class="bg-white p-3.5 rounded-2xl shadow-card border border-slate-200/80 space-y-3">
+        <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+          <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-boxes-stacked text-brand-500"></i> คลังวัตถุดิบ (Inventory Stock)
+          </span>
+          <button onclick="showAddIngredientModal()" class="btn-press bg-brand-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
+            <i class="fa-solid fa-plus"></i> เพิ่มชนิด
+          </button>
+        </div>
+        <div id="ingredientListContainer" class="space-y-2"></div>
+      </div>
+
+      <!-- Waste Log -->
+      <div class="bg-white p-3.5 rounded-2xl shadow-card border border-slate-200/80 space-y-3">
+        <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+          <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-triangle-exclamation text-rose-500"></i> บันทึกยอดเสีย / หมดอายุ (Waste Log)
+          </span>
+        </div>
+        <button onclick="showAddWasteModal()" class="w-full btn-press bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-trash-arrow-up"></i> บันทึกตัดยอดเสียวัตถุดิบ
+        </button>
+        <div id="wasteLogContainer" class="max-h-40 overflow-y-auto space-y-1.5"></div>
+      </div>
+    </section>
+
+    <section id="tabFinance" class="hidden space-y-3">
+      <!-- Finance Sub Navigation -->
+      <div class="bg-white p-1 rounded-2xl shadow-card border border-slate-200/80 grid grid-cols-4 gap-1 text-[11px]">
+        <button onclick="switchFinanceSubTab('sales')" id="subFinSalesBtn" class="py-2 rounded-xl font-bold bg-brand-500 text-white text-center transition-all truncate px-1">
+          📊 ยอดขาย
+        </button>
+        <button onclick="switchFinanceSubTab('expenses')" id="subFinExpensesBtn" class="py-2 rounded-xl font-bold text-slate-600 hover:bg-slate-100 text-center transition-all truncate px-1">
+          🧾 เบิกซื้อ
+        </button>
+        <button onclick="switchFinanceSubTab('petty')" id="subFinPettyBtn" class="py-2 rounded-xl font-bold text-slate-600 hover:bg-slate-100 text-center transition-all truncate px-1">
+          💵 ลิ้นชัก
+        </button>
+        <button onclick="switchFinanceSubTab('audit')" id="subFinAuditBtn" class="py-2 rounded-xl font-bold text-slate-600 hover:bg-slate-100 text-center transition-all truncate px-1">
+          🔒 Audit
+        </button>
+      </div>
+
+      <!-- Sub View 1: Sales & Profit 50/50 -->
+      <div id="finSalesView" class="space-y-3">
+        <div class="bg-white p-3.5 rounded-2xl shadow-card border border-slate-200/80 space-y-3">
+          <div class="text-xs font-bold text-slate-800 pb-2 border-b border-slate-100 flex items-center justify-between">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-chart-line text-brand-500"></i> สรุปผลการขายประจำวัน</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-center">
+            <div class="bg-gradient-to-br from-orange-50 to-amber-50 p-3 rounded-xl border border-orange-200/60">
+              <div class="text-[10px] font-medium text-slate-500">ยอดขายรวมทั้งหมด</div>
+              <div id="totalRevenue" class="text-lg font-black text-brand-600">0 บาท</div>
+            </div>
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-3 rounded-xl border border-blue-200/60">
+              <div class="text-[10px] font-medium text-slate-500">จำนวนออเดอร์</div>
+              <div id="totalOrdersCount" class="text-lg font-black text-blue-600">0</div>
+            </div>
+          </div>
+
+          <!-- Owner GP & Waste View -->
+          <div id="ownerProfitView" class="grid grid-cols-2 gap-2 text-center">
+            <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-200/60">
+              <div class="text-[10px] font-medium text-emerald-700">กำไรขั้นต้น (GP)</div>
+              <div id="totalGrossProfit" class="text-base font-bold text-emerald-700">0 บาท</div>
+            </div>
+            <div class="bg-rose-50 p-3 rounded-xl border border-rose-200/60">
+              <div class="text-[10px] font-medium text-rose-700">มูลค่าวัตถุดิบเสีย</div>
+              <div id="totalWasteCost" class="text-base font-bold text-rose-700">0 บาท</div>
+            </div>
+          </div>
+
+          <!-- Daily Rent/Utility Cost Deduction -->
+          <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 text-xs flex justify-between items-center text-slate-700">
+            <span class="flex items-center gap-1.5 font-medium">
+              <i class="fa-solid fa-building text-slate-400"></i> หักค่าเช่า/ค่าน้ำไฟประจำวัน:
+            </span>
+            <b id="dailyFixedCostDisplay" class="text-slate-800 font-bold">200.00 บาท/วัน</b>
+          </div>
+
+          <!-- Joint Venture Profit Sharing Widget -->
+          <div id="jointVentureWidget" class="bg-gradient-to-br from-emerald-50 to-teal-50 p-3.5 rounded-xl border border-emerald-300 space-y-2">
+            <div class="flex justify-between items-center text-xs font-bold text-emerald-900">
+              <span class="flex items-center gap-1.5"><i class="fa-solid fa-handshake text-emerald-600"></i> แบ่งปันผลกำไรสุทธิ 50/50</span>
+              <span id="netProfitAmount" class="text-sm font-black text-emerald-700">0.00 บาท</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 pt-1 text-center">
+              <div class="bg-white p-2 rounded-lg border border-emerald-200 shadow-2xs">
+                <div class="text-[10px] text-slate-500 font-medium" id="partner1Label">หุ้นส่วน A (50%)</div>
+                <div class="text-xs font-bold text-emerald-700" id="partner1Share">0.00 B.</div>
+              </div>
+              <div class="bg-white p-2 rounded-lg border border-emerald-200 shadow-2xs">
+                <div class="text-[10px] text-slate-500 font-medium" id="partner2Label">หุ้นส่วน B (50%)</div>
+                <div class="text-xs font-bold text-emerald-700" id="partner2Share">0.00 B.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sales History -->
+        <div class="bg-white p-3.5 rounded-2xl shadow-card border border-slate-200/80 space-y-2">
+          <div class="text-xs font-bold text-slate-800 pb-2 border-b border-slate-100 flex items-center gap-1.5">
+            <i class="fa-solid fa-receipt text-slate-500"></i> ประวัติรายการขาย
+          </div>
+          <div id="salesHistory" class="max-h-60 overflow-y-auto space-y-1.5"></div>
+        </div>
+      </div>
+
+      <!-- Sub View 2: Out-of-Pocket Expenses -->
+      <div id="finExpensesView" class="hidden space-y-3">
+        <div class="bg-white p-3.5 rounded-2xl shadow-card border border-slate-200/80 space-y-3">
+          <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+            <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <i class="fa-solid fa-file-invoice-dollar text-indigo-500"></i> เบิกจ่ายซื้อวัตถุดิบ (Out-of-Pocket)
+            </span>
+            <button onclick="openAddExpenseModal()" class="btn-press bg-indigo-600 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
+              <i class="fa-solid fa-plus"></i> เบิกเงินซื้อของ
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-500">บันทึกเงินสำรองจ่ายของหุ้นส่วน/พนักงาน พร้อมแนบสลิป/ใบเสร็จ</p>
+          <div id="expenseLogsList" class="space-y-2"></div>
+        </div>
+      </div>
+
+      <!-- Sub View 3: Cash Drawer Float -->
+      <div id="finPettyView" class="hidden space-y-3">
+        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 p-4 rounded-2xl text-white text-center shadow-md space-y-2">
+          <div class="text-xs font-semibold text-emerald-100">ยอดเงินสดสำรองในลิ้นชัก (Cash Float)</div>
+          <div id="pettyCashBalanceDisplay" class="text-3xl font-black text-white">0.00 บาท</div>
+          <div class="flex gap-2 justify-center pt-2">
+            <button onclick="openPettyCashModal('cash_in')" class="btn-press bg-white text-emerald-700 hover:bg-emerald-50 text-xs font-bold px-4 py-2 rounded-xl shadow-sm flex items-center gap-1">
+              <i class="fa-solid fa-arrow-down-left"></i> ฝากเงินเข้า
+            </button>
+            <button onclick="openPettyCashModal('cash_out')" class="btn-press bg-rose-500 text-white hover:bg-rose-600 text-xs font-bold px-4 py-2 rounded-xl shadow-sm flex items-center gap-1">
+              <i class="fa-solid fa-arrow-up-right"></i> ถอนเงินสดออก
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-amber-50 p-3.5 rounded-2xl border border-amber-300 shadow-sm space-y-2">
+          <div class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+            <i class="fa-solid fa-user-shield text-amber-600"></i> ปิดกะ/กระทบยอดเงินสดปลายวัน (Blind Cash Audit)
+          </div>
+          <p class="text-[11px] text-amber-800">นับเงินสดที่มีจริงในลิ้นชักเพื่อตรวจสอบว่าเงินขาดหรือเกินจากระบบ</p>
+          <button onclick="openBlindCashAuditModal()" class="w-full btn-press bg-amber-600 text-white text-xs font-bold py-2 rounded-xl shadow-sm flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-magnifying-glass-dollar"></i> ปิดกะและกระทบยอดเงินสด
+          </button>
+        </div>
+
+        <div class="bg-white p-3.5 rounded-2xl shadow-card border border-slate-200/80 space-y-2">
+          <div class="text-xs font-bold text-slate-800 pb-2 border-b border-slate-100 flex items-center gap-1.5">
+            <i class="fa-solid fa-list-ol text-slate-500"></i> ประวัติการเคลื่อนไหวเงินสดสำรอง
+          </div>
+          <div id="pettyCashLogsContainer" class="max-h-52 overflow-y-auto space-y-1.5"></div>
+        </div>
+      </div>
+
+      <!-- Sub View 4: Audit Log -->
+      <div id="finAuditView" class="hidden space-y-3">
+        <div class="bg-white p-3.5 rounded-2xl shadow-card border border-slate-200/80 space-y-3">
+          <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+            <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <i class="fa-solid fa-shield-halved text-brand-500"></i> Audit Log ประวัติความปลอดภัย
+            </span>
+            <span class="text-[10px] text-slate-400">🔒 ป้องกันการแก้ไข</span>
+          </div>
+          <div class="pl-3 border-l-2 border-slate-200 space-y-3" id="auditLogTimeline"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tabSettings" class="hidden space-y-3">
+      <!-- PWA Install Banner -->
+      <div class="bg-gradient-to-r from-emerald-500 to-teal-600 p-3.5 rounded-2xl text-white flex justify-between items-center shadow-sm">
+        <div>
+          <div class="text-xs font-bold">ติดตั้งแอป POS บนมือถือ</div>
+          <div class="text-[10px] text-emerald-100">เพื่อการใช้งานที่สะดวกเหมือนแอปจริง</div>
+        </div>
+        <button onclick="installPWA()" class="btn-press bg-white text-emerald-700 text-xs font-bold px-3 py-2 rounded-xl shadow-sm flex items-center gap-1">
+          <i class="fa-solid fa-download"></i> ติดตั้งแอป
+        </button>
+      </div>
+
+      <!-- Store Configuration -->
+      <div class="bg-white p-3.5 rounded-2xl shadow-card border border-slate-200/80 space-y-3">
+        <div class="text-xs font-bold text-slate-800 pb-2 border-b border-slate-100 flex items-center gap-1.5">
+          <i class="fa-solid fa-store text-brand-500"></i> ข้อมูลร้าน & ต้นทุนคงที่
+        </div>
+        <div class="space-y-2 text-xs">
+          <div>
+            <label class="block text-slate-600 mb-1 font-medium">ชื่อร้าน</label>
+            <input type="text" id="settingStoreName" class="w-full bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-slate-600 mb-1 font-medium">เบอร์ PromptPay (สำหรับสร้าง QR รับเงิน)</label>
+            <input type="text" id="settingPromptpay" class="w-full bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-slate-600 mb-1 font-medium">ค่าเช่า + ค่าน้ำไฟ รวมต่อเดือน (บาท)</label>
+            <input type="number" id="settingMonthlyFixedCost" class="w-full bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          </div>
+          <button onclick="saveStoreSettings()" class="w-full btn-press bg-brand-500 text-white font-bold py-2 rounded-xl shadow-sm text-xs">
+            บันทึกข้อมูลร้าน
+          </button>
+        </div>
+      </div>
+
+      <!-- Partner Dual PIN Configuration -->
+      <div class="bg-white p-3.5 rounded-2xl shadow-card border border-indigo-200 space-y-3">
+        <div class="text-xs font-bold text-indigo-900 pb-2 border-b border-indigo-100 flex items-center gap-1.5">
+          <i class="fa-solid fa-key text-indigo-600"></i> การตั้งค่า PIN หุ้นส่วน 50/50
+        </div>
+        <p class="text-[11px] text-slate-500">กำหนดรหัส PIN 4 หลักสำหรับอนุมัติการยกเลิกบิล หรือปรับแก้ไขข้อมูลสำคัญ</p>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="space-y-1.5">
+            <label class="block font-medium text-slate-700">ชื่อหุ้นส่วน A</label>
+            <input type="text" id="settingP1Name" class="w-full bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200" placeholder="หุ้นส่วน 1">
+            <label class="block font-medium text-slate-700">PIN หุ้นส่วน A (4 หลัก)</label>
+            <input type="password" maxlength="4" id="settingP1Pin" class="w-full bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200 font-mono tracking-widest text-center" placeholder="1234">
+          </div>
+          <div class="space-y-1.5">
+            <label class="block font-medium text-slate-700">ชื่อหุ้นส่วน B</label>
+            <input type="text" id="settingP2Name" class="w-full bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200" placeholder="หุ้นส่วน 2">
+            <label class="block font-medium text-slate-700">PIN หุ้นส่วน B (4 หลัก)</label>
+            <input type="password" maxlength="4" id="settingP2Pin" class="w-full bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200 font-mono tracking-widest text-center" placeholder="5678">
+          </div>
+        </div>
+        <button onclick="savePartnerPinSettings()" class="w-full btn-press bg-indigo-600 text-white font-bold py-2 rounded-xl text-xs shadow-sm">
+          บันทึกรหัส PIN หุ้นส่วน
+        </button>
+      </div>
+
+      <!-- Queue Control -->
+      <div class="bg-white p-3.5 rounded-2xl shadow-card border border-slate-200/80 flex justify-between items-center text-xs">
+        <div>
+          <span class="font-bold text-slate-700">ลำดับคิวปัจจุบัน: </span>
+          <b id="settingCurrentQueue" class="text-brand-600 text-sm font-black">1</b>
+        </div>
+        <button onclick="resetQueue()" class="btn-press bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold px-3 py-1.5 rounded-lg border border-rose-200">
+          รีเซ็ตคิวเริ่มที่ #1
+        </button>
+      </div>
+
+      <!-- Data Backup / Restore -->
+      <div class="bg-white p-3.5 rounded-2xl shadow-card border border-slate-200/80 space-y-2">
+        <div class="text-xs font-bold text-slate-800 pb-1 flex items-center gap-1.5">
+          <i class="fa-solid fa-database text-slate-500"></i> สำรอง & กู้คืนข้อมูลร้าน (Backup/Restore)
+        </div>
+        <div class="flex gap-2">
+          <button onclick="exportDataJSON()" class="flex-1 btn-press bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-xl text-xs border border-slate-200 flex items-center justify-center gap-1">
+            <i class="fa-solid fa-download"></i> ดาวน์โหลดสำรอง
+          </button>
+          <button onclick="document.getElementById('importFileInput').click()" class="flex-1 btn-press bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded-xl text-xs border border-slate-200 flex items-center justify-center gap-1">
+            <i class="fa-solid fa-upload"></i> กู้คืนข้อมูล
+          </button>
+          <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importDataJSON(event)">
+        </div>
+      </div>
+
+      <!-- Sauce Management -->
+      <div class="bg-white p-3.5 rounded-2xl shadow-card border border-slate-200/80 space-y-2">
+        <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+          <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-wine-bottle text-amber-500"></i> จัดการรายการซอสราด
+          </span>
+          <button onclick="addNewSauce()" class="btn-press bg-emerald-600 text-white text-[11px] font-bold px-2 py-1 rounded-lg">
+            + เพิ่มซอส
+          </button>
+        </div>
+        <div id="settingSauceList" class="space-y-1.5 text-xs"></div>
+      </div>
+
+      <!-- Menu Management -->
+      <div class="bg-white p-3.5 rounded-2xl shadow-card border border-slate-200/80 space-y-2">
+        <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+          <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-utensils text-brand-500"></i> จัดการเมนูอาหาร & สูตร BOM
+          </span>
+          <button onclick="addNewMenu()" class="btn-press bg-brand-500 text-white text-[11px] font-bold px-2 py-1 rounded-lg">
+            + เพิ่มเมนู
+          </button>
+        </div>
+        <div id="settingMenuList" class="space-y-1.5 text-xs"></div>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- Modal 1: Payment Modal -->
+  <div id="paymentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-end sm:items-center justify-center z-50 p-0 sm:p-4 transition-all">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 shadow-2xl animate-slide-up">
+      <div class="text-center space-y-1">
+        <div class="text-xs text-slate-400 font-medium">รับชำระเงินหน้าร้าน</div>
+        <div id="modalQueueNumber" class="text-xl font-black text-brand-500">คิวที่ #1</div>
+        <div id="modalTotalAmount" class="text-3xl font-black text-slate-900">0 บาท</div>
+      </div>
+
+      <!-- Payment Method Switcher -->
+      <div class="bg-slate-100 p-1 rounded-xl flex gap-1 text-xs">
+        <button id="payTabCashBtn" onclick="switchPayMethod('cash')" class="flex-1 py-2 rounded-lg font-bold bg-white text-slate-800 shadow-sm transition-all">
+          💵 เงินสด (Cash)
+        </button>
+        <button id="payTabQrBtn" onclick="switchPayMethod('qr')" class="flex-1 py-2 rounded-lg font-bold text-slate-500 hover:text-slate-800 transition-all">
+          📱 สแกน PromptPay
+        </button>
+        <button id="payTabOtherBtn" onclick="switchPayMethod('other')" class="flex-1 py-2 rounded-lg font-bold text-slate-500 hover:text-slate-800 transition-all">💳 อื่นๆ</button>
+      </div>
+
+      <!-- Cash Tender Input Section -->
+      <div id="payCashSection" class="space-y-3">
+        <div class="flex flex-wrap gap-1.5 justify-center"><span id="quickCashBtns" class="contents"></span>
+        </div>
+
+        <div>
+          <label class="block text-center text-xs font-medium text-slate-500 mb-1">เงินสดที่รับมา (บาท):</label>
+          <input type="number" id="cashReceivedInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 text-center text-2xl font-black text-slate-800 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="0.00" oninput="calculateChange()">
+        </div>
+
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+          <div class="text-[11px] font-medium text-slate-500">เงินทอน:</div>
+          <div id="cashChangeDisplay" class="text-2xl font-black text-emerald-600">0.00 บาท</div>
+        </div>
+      </div>
+
+      <!-- QR Payment Section -->
+      <div id="payQrSection" class="hidden space-y-2 text-center">
+        <div class="p-3 bg-white border border-slate-200 rounded-2xl inline-block shadow-sm">
+          <img id="qrImage" src="" alt="PromptPay QR" class="w-40 h-40 mx-auto object-contain">
+        </div>
+        <div class="text-xs text-slate-400">พร้อมเพย์: <span id="modalPromptpayNo" class="font-bold text-slate-700"></span></div>
+      </div>
+
+      <div id="payOtherSection" class="hidden space-y-2"><select id="otherPaymentMethod" class="w-full p-3 border rounded-xl text-sm"><option value="card">บัตร</option><option value="other">อื่นๆ</option></select></div>
+
+      <div class="space-y-2 pt-2">
+        <button onclick="confirmPaymentSuccess()" class="w-full btn-press bg-emerald-600 text-white font-bold py-3 rounded-2xl shadow-md text-sm flex items-center justify-center gap-2">
+          <i class="fa-solid fa-circle-check"></i> ยืนยันรับเงิน (ตัดสต็อค)
+        </button>
+        <button onclick="closeModal('paymentModal')" class="w-full text-xs text-slate-400 hover:text-slate-600 font-medium py-1">
+          ย้อนกลับ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Expense Request Modal -->
+  <div id="expenseModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-3 shadow-2xl animate-slide-up text-left">
+      <div class="text-sm font-bold text-slate-800 flex items-center gap-1.5 border-b border-slate-100 pb-2">
+        <i class="fa-solid fa-file-invoice-dollar text-indigo-600"></i> บันทึกเบิกเงินซื้อวัตถุดิบ (Out-of-Pocket)
+      </div>
+
+      <div class="space-y-2 text-xs">
+        <div>
+          <label class="block text-slate-600 mb-1 font-medium">ผู้ขอเบิก / หุ้นส่วน:</label>
+          <input type="text" id="legacyExpRequester" class="w-full bg-slate-50 px-3 py-2 rounded-xl border border-slate-200" placeholder="ระบุชื่อผู้เบิก...">
+        </div>
+        <div>
+          <label class="block text-slate-600 mb-1 font-medium">รายการวัตถุดิบ / รายละเอียด:</label>
+          <input type="text" id="legacyExpDescription" class="w-full bg-slate-50 px-3 py-2 rounded-xl border border-slate-200" placeholder="เช่น ซื้อไก่สด 5 กก. จากตลาด...">
+        </div>
+        <div>
+          <label class="block text-slate-600 mb-1 font-medium">จำนวนเงิน (บาท):</label>
+          <input type="number" id="legacyExpAmount" class="w-full bg-slate-50 px-3 py-2 rounded-xl border border-slate-200" placeholder="0.00">
+        </div>
+        <div>
+          <label class="block text-slate-600 mb-1 font-medium">แนบหลักฐานสลิป / ใบเสร็จ:</label>
+          <input type="file" id="expFileInput" accept="image/*" class="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" onchange="handleFileSelect(event)">
+          <img id="expPreviewImg" class="w-full max-h-36 object-contain rounded-xl border border-dashed border-slate-300 mt-2 hidden" alt="Slip Preview">
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="submitExpenseForm()" class="flex-1 btn-press bg-indigo-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm">
+          ส่งขอเบิกเงิน
+        </button>
+        <button onclick="closeModal('expenseModal')" class="flex-1 bg-slate-100 text-slate-600 font-bold py-2.5 rounded-xl text-xs">
+          ยกเลิก
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Petty Cash In/Out -->
+  <div id="pettyCashModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-3 shadow-2xl animate-slide-up text-left">
+      <div id="pettyModalTitle" class="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2">
+        💵 จัดการเงินสดสำรองร้าน
+      </div>
+      <input type="hidden" id="pettyActionType" value="cash_in">
+
+      <div class="space-y-2 text-xs">
+        <div>
+          <label class="block text-slate-600 mb-1 font-medium">จำนวนเงิน (บาท):</label>
+          <input type="number" id="pettyAmount" class="w-full bg-slate-50 px-3 py-2 rounded-xl border border-slate-200" placeholder="0.00">
+        </div>
+        <div>
+          <label class="block text-slate-600 mb-1 font-medium">เหตุผล / รายละเอียด:</label>
+          <input type="text" id="pettyReason" class="w-full bg-slate-50 px-3 py-2 rounded-xl border border-slate-200" placeholder="เช่น เติมเงินทอนช่วงเช้า, นำเงินเข้าธนาคาร...">
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="submitPettyCashAction()" class="flex-1 btn-press bg-brand-500 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm">
+          บันทึกรายการ
+        </button>
+        <button onclick="closeModal('pettyCashModal')" class="flex-1 bg-slate-100 text-slate-600 font-bold py-2.5 rounded-xl text-xs">
+          ยกเลิก
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Quick Daily Buy Modal -->
+  <div id="quickBuyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-3 shadow-2xl animate-slide-up text-left">
+      <div class="text-sm font-bold text-emerald-800 border-b border-slate-100 pb-2 flex items-center gap-1.5">
+        <i class="fa-solid fa-cart-shopping"></i> ซื้อวัตถุดิบสดเข้าคลังวันต่อวัน
+      </div>
+      <div class="text-[11px] text-slate-500">ระบบจะเพิ่มสต็อควัตถุดิบ และตัดยอดเงินสดออกจากลิ้นชักให้อัตโนมัติ</div>
+
+      <div class="space-y-2 text-xs">
+        <div>
+          <label class="block text-slate-700 mb-1 font-medium">เลือกวัตถุดิบ:</label>
+          <select id="quickBuyIngredientSelect" class="w-full bg-slate-50 px-3 py-2 rounded-xl border border-slate-200"></select>
+        </div>
+        <div>
+          <label class="block text-slate-700 mb-1 font-medium">จำนวนที่ซื้อเพิ่ม:</label>
+          <input type="number" id="quickBuyQty" class="w-full bg-slate-50 px-3 py-2 rounded-xl border border-slate-200" placeholder="0">
+        </div>
+        <div>
+          <label class="block text-slate-700 mb-1 font-medium">ราคารวมที่จ่ายจริง (บาท):</label>
+          <input type="number" id="quickBuyCost" class="w-full bg-slate-50 px-3 py-2 rounded-xl border border-slate-200" placeholder="0.00">
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="submitQuickDailyBuy()" class="flex-1 btn-press bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm">
+          บันทึกซื้อเข้าคลัง
+        </button>
+        <button onclick="closeModal('quickBuyModal')" class="flex-1 bg-slate-100 text-slate-600 font-bold py-2.5 rounded-xl text-xs">
+          ยกเลิก
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: Image Viewer -->
+  <div id="imageViewerModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl p-4 text-center space-y-3">
+      <div class="text-xs font-bold text-slate-800">🔍 หลักฐานสลิป / ใบเสร็จ</div>
+      <img id="fullSizeSlipImg" src="" class="w-full max-h-80 object-contain rounded-xl border border-slate-200">
+      <button onclick="closeModal('imageViewerModal')" class="w-full bg-slate-100 text-slate-700 font-bold py-2 rounded-xl text-xs">
+        ปิด
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal 6: Confirmation Box -->
+  <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white w-full max-w-sm rounded-2xl p-5 space-y-3 text-center shadow-xl">
+      <div id="confirmTitle" class="text-sm font-bold text-slate-800">ยืนยันการทำรายการ</div>
+      <div id="confirmMessage" class="text-xs text-slate-500">คุณแน่ใจหรือไม่ที่จะดำเนินการนี้?</div>
+      <div class="flex gap-2 pt-2">
+        <button id="confirmYesBtn" class="flex-1 btn-press bg-brand-500 text-white font-bold py-2 rounded-xl text-xs">
+          ตกลง
+        </button>
+        <button onclick="closeModal('confirmModal')" class="flex-1 bg-slate-100 text-slate-600 font-bold py-2 rounded-xl text-xs">
+          ยกเลิก
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 7: Dual PIN Verification Modal -->
+  <div id="dualPinModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-3 shadow-2xl animate-slide-up text-left">
+      <div class="text-sm font-bold text-slate-800 flex items-center gap-1.5 border-b border-slate-100 pb-2">
+        <i class="fa-solid fa-lock text-indigo-600"></i> ยืนยันด้วยรหัส PIN อนุมัติคู่
+      </div>
+      <div id="dualPinActionText" class="text-xs text-rose-600 font-medium">การดำเนินการนี้ต้องการการอนุมัติร่วมจากทั้ง 2 หุ้นส่วน</div>
+
+      <div class="space-y-2 text-xs">
+        <div>
+          <label class="block text-slate-700 mb-1 font-medium" id="lblPartner1Pin">PIN หุ้นส่วน A:</label>
+          <input type="password" maxlength="4" id="inputP1Pin" class="w-full bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 font-mono tracking-widest text-center" placeholder="****">
+        </div>
+        <div>
+          <label class="block text-slate-700 mb-1 font-medium" id="lblPartner2Pin">PIN หุ้นส่วน B:</label>
+          <input type="password" maxlength="4" id="inputP2Pin" class="w-full bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 font-mono tracking-widest text-center" placeholder="****">
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="verifyDualPinSubmit()" class="flex-1 btn-press bg-indigo-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm">
+          ยืนยันอนุมัติ
+        </button>
+        <button onclick="closeModal('dualPinModal')" class="flex-1 bg-slate-100 text-slate-600 font-bold py-2.5 rounded-xl text-xs">
+          ยกเลิก
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 8: Blind Cash Audit Modal -->
+  <div id="blindAuditModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+    <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-3 shadow-2xl animate-slide-up text-left">
+      <div class="text-sm font-bold text-amber-900 border-b border-slate-100 pb-2 flex items-center gap-1.5">
+        <i class="fa-solid fa-magnifying-glass-dollar text-amber-600"></i> ตรวจนับเงินสดปิดกะปลายวัน (Blind Cash Audit)
+      </div>
+      <div class="text-[11px] text-slate-500">
+        กรอกยอดเงินสดนับได้จริงในลิ้นชัก ระบบจะตรวจสอบกับยอดขายและยอดเงินสดสำรองโดยอัตโนมัติ
+      </div>
+
+      <div class="space-y-2 text-xs">
+        <div>
+          <label class="block text-slate-700 mb-1 font-medium">ยอดเงินสดจากการนับจริง (บาท):</label>
+          <input type="number" step="0.01" id="blindCashActual" class="w-full bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 text-base font-bold text-slate-800" placeholder="0.00">
+        </div>
+        <div>
+          <label class="block text-slate-700 mb-1 font-medium">หมายเหตุ / บันทึกเพิ่มเติม:</label>
+          <input type="text" id="blindCashNote" class="w-full bg-slate-50 px-3 py-2 rounded-xl border border-slate-200" placeholder="เช่น เงินทอนไม่พอ, คาดว่าทอนผิด 20 บาท">
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="submitBlindCashAudit()" class="flex-1 btn-press bg-amber-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm">
+          ยืนยันปิดกะกระทบยอด
+        </button>
+        <button onclick="closeModal('blindAuditModal')" class="flex-1 bg-slate-100 text-slate-600 font-bold py-2.5 rounded-xl text-xs">
+          ยกเลิก
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="v4Modal" class="hidden fixed inset-0 z-[49] bg-slate-900/60 items-end sm:items-center justify-center"><div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-3 shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto"><div id="v4ModalTitle" class="text-sm font-bold border-b border-slate-100 pb-2"></div><div id="v4ModalBody"></div><div class="flex gap-2 pt-2"><button id="v4SaveBtn" class="flex-1 btn-press bg-brand-500 text-white font-bold py-2.5 rounded-xl text-xs">บันทึก</button><button onclick="closeV4Modal()" class="flex-1 bg-slate-100 text-slate-600 font-bold py-2.5 rounded-xl text-xs">ปิด</button></div></div></div>
+<div id="v4NotifyModal" class="hidden fixed inset-0 z-[49] bg-slate-900/60 items-end sm:items-center justify-center"><div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-3 shadow-2xl animate-slide-up max-h-[90vh] flex-col"><div class="text-sm font-bold border-b border-slate-100 pb-2">🔔 ศูนย์แจ้งเตือน</div><div id="v4NotifyList" class="space-y-2 max-h-[55vh] overflow-y-auto"></div><div class="grid grid-cols-3 gap-2 pt-2 text-xs font-bold"><button onclick="markAllNotificationsRead()" class="py-2.5 rounded-xl bg-emerald-50 text-emerald-700">อ่านทั้งหมด</button><button onclick="clearNotifications()" class="py-2.5 rounded-xl bg-rose-50 text-rose-700">ล้าง</button><button onclick="closeV4Notify()" class="py-2.5 rounded-xl bg-slate-100 text-slate-600">ปิด</button></div></div></div>
+<nav class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-lg z-40 max-w-md mx-auto">
+    <div class="flex justify-around items-center px-2 py-1.5">
+      <button onclick="switchTab('tabOrder')" id="navOrder" class="flex flex-col items-center gap-0.5 text-brand-500 font-bold text-[10px] w-1/6 py-1">
+        <i class="fa-solid fa-cart-shopping text-base"></i>
+        <span>สั่งอาหาร</span>
+      </button>
+      <button onclick="switchTab('tabHeld')" id="navHeld" class="flex flex-col items-center gap-0.5 text-slate-400 font-medium text-[10px] w-1/6 py-1">
+        <i class="fa-solid fa-circle-pause text-base"></i>
+        <span>พักบิล</span>
+      </button>
+      <button onclick="switchTab('tabKitchen')" id="navKitchen" class="flex flex-col items-center gap-0.5 text-slate-400 font-medium text-[10px] w-1/6 py-1">
+        <i class="fa-solid fa-kitchen-set text-base"></i>
+        <span>ครัว</span>
+      </button>
+      <button onclick="switchTab('tabStock')" id="navStock" class="flex flex-col items-center gap-0.5 text-slate-400 font-medium text-[10px] w-1/6 py-1">
+        <i class="fa-solid fa-boxes-stacked text-base"></i>
+        <span>สต็อค</span>
+      </button>
+      <button onclick="switchTab('tabFinance')" id="navFinance" class="flex flex-col items-center gap-0.5 text-slate-400 font-medium text-[10px] w-1/6 py-1">
+        <i class="fa-solid fa-chart-line text-base"></i>
+        <span>การเงิน</span>
+      </button>
+      <button onclick="switchTab('tabSettings')" id="navSettings" class="flex flex-col items-center gap-0.5 text-slate-400 font-medium text-[10px] w-1/6 py-1">
+        <i class="fa-solid fa-gear text-base"></i>
+        <span>ตั้งค่า</span>
+      </button>
+    </div>
+  </nav>
+
+  <script>
+(function(){
+'use strict';
+const APP_VERSION='4.3.0'; const SCHEMA_VERSION=5; const KEY='restaurant_pos_v4_data'; const LEGACY='pos_app_data';
+const $=id=>document.getElementById(id), num=v=>Number.isFinite(Number(v))?Number(v):0, money=v=>Math.round(num(v)*100)/100, costValue=v=>Math.round(num(v)*1000000)/1000000, qtyValue=v=>Math.round(num(v)*1000000)/1000000;
+const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const deep=o=>JSON.parse(JSON.stringify(o));
+const localDate=(d=new Date())=>{const x=new Date(d),p=n=>String(n).padStart(2,'0');return `${x.getFullYear()}-${p(x.getMonth()+1)}-${p(x.getDate())}`};
+const localDateTime=(d=new Date())=>{const x=new Date(d),p=n=>String(n).padStart(2,'0');return `${localDate(x)} ${p(x.getHours())}:${p(x.getMinutes())}:${p(x.getSeconds())}`};
+const uid=(p='TX')=>`${p}-${Date.now()}-${Math.random().toString(36).slice(2,9).toUpperCase()}`;
+function sha256(s){const r=(n,x)=>x>>>n|x<<32-n,k=[],h=[];let c=0,i,j;const isP=n=>{for(let d=2;d*d<=n;d++)if(n%d===0)return 0;return 1};for(let n=2;c<64;n++)if(isP(n)){if(c<8)h[c]=Math.pow(n,.5)%1*4294967296|0;k[c++]=Math.pow(n,1/3)%1*4294967296|0}
+s=unescape(encodeURIComponent(s));const w=[],l=s.length;for(i=0;i<l;i++)w[i>>2]|=s.charCodeAt(i)<<(24-i%4*8);w[l>>2]|=128<<(24-l%4*8);const N=(((l+8)>>6)<<4)+16;for(i=0;i<N;i++)w[i]=w[i]|0;w[N-1]=l*8;
+for(j=0;j<N;j+=16){const a=w.slice(j,j+16),t=h.slice(0);for(i=0;i<64;i++){if(i>=16){const x=a[i-15],y=a[i-2];a[i]=(a[i-16]+(r(7,x)^r(18,x)^x>>>3)+a[i-7]+(r(17,y)^r(19,y)^y>>>10))|0}const e=t[4],A=t[0],t1=(t[7]+(r(6,e)^r(11,e)^r(25,e))+((e&t[5])^(~e&t[6]))+k[i]+a[i])|0,t2=((r(2,A)^r(13,A)^r(22,A))+((A&t[1])^(A&t[2])^(t[1]&t[2])))|0;t.unshift((t1+t2)|0);t[4]=(t[4]+t1)|0;t.pop()}for(i=0;i<8;i++)h[i]=(h[i]+t[i])|0}
+return h.map(x=>('00000000'+(x>>>0).toString(16)).slice(-8)).join('')}
+function pinHash(p){return sha256('pos-v4:'+p)}
+function pinOk(n,v){return !!v&&pinHash(String(v))===appData['partner'+n+'PinHash']}
+const defaults={
+ schemaVersion:SCHEMA_VERSION,storeName:'นักล่ายูนิฟอร์ม',description:'',logo:'',phone:'',promptpay:'0973383488',currency:'บาท',taxRate:0,serviceChargeRate:0,
+ monthlyFixedCost:6000,fixedCosts:{rent:0,utilities:0,other:0},currentQueue:1,role:'owner',activePartnerId:1,
+ partner1Name:'หุ้นส่วน A',partner1PinHash:pinHash('1234'),partner2Name:'หุ้นส่วน B',partner2PinHash:pinHash('5678'),
+ partners:{1:{id:1,share:50,capital:0},2:{id:2,share:50,capital:0}},
+ settings:{
+  queueEnabled:true,tableEnabled:true,takeAwayEnabled:true,holdEnabled:true,notesEnabled:true,toppingEnabled:true,sauceEnabled:true,searchEnabled:true,categoryEnabled:true,
+  maxToppings:99,maxSauces:2,confirmClearCart:true,confirmDelete:true,preventDoublePayment:true,
+  lowStockEnabled:true,lowStockThresholdPct:20,defaultMinStock:0,defaultUnit:'กรัม',costMethod:'weighted_average',allowNegativeStock:false,allowNegativeCash:false,requireCost:true,requireStockAdjustmentReason:true,wasteApproval:false,
+  kitchenAutoRefresh:true,kitchenWarningMinutes:10,kitchenCriticalMinutes:20,kitchenSound:true,kitchenVibrate:true,autoHideCompleted:false,queueDisplay:true,
+  notificationEnabled:true,browserNotification:false,autoLockMinutes:0,quickCash:[20,50,100,500,1000],currency:'บาท',
+  requireVoidPin:true,requireDeletePin:true,requirePricePin:false,requireDailyClosePin:true,dualPinApproval:false,
+  blindCashCount:false,cashDifferenceThreshold:0,confirmRestore:true,haptic:true,compactMode:false,
+ },
+ categories:[{id:1,name:'ทั้งหมด',active:true}],
+ ingredients:[],menus:[],toppings:[],sauces:[],recipes:[],orders:[],heldOrders:[],kitchenOrders:[],stockLedger:[],cashLedger:[],salesLedger:[],expenseLedger:[],wasteLedger:[],partnerLedger:[],dailyClosings:[],notifications:[],auditLogs:[],voidedOrderIds:[],expenses:[],pettyCashLogs:[],
+};
+const demo={ingredients:[{id:1,name:'เนื้อไก่',qty:5000,unit:'กรัม',costPerUnit:.12,minQty:1000,active:true},{id:2,name:'แป้งทอดกรอบ',qty:2000,unit:'กรัม',costPerUnit:.05,minQty:500,active:true},{id:3,name:'ซอสนันบัง',qty:1000,unit:'กรัม',costPerUnit:.20,minQty:200,active:true}],menus:[{id:1,name:'Pocket Tori Nanban',price:59,bom:[{ingredientId:1,qty:150},{ingredientId:3,qty:30}],active:true,categoryId:1},{id:2,name:'Pocket Karaage',price:49,bom:[{ingredientId:1,qty:120},{ingredientId:2,qty:30}],active:true,categoryId:1}],toppings:[{id:101,name:'cheese dip',price:10,active:true}],sauces:[{id:201,name:'ซอสกระเพรา',price:0,active:true},{id:202,name:'ซอสนันบัง',price:0,active:true},{id:203,name:'ซอสเทอริยากิ',price:0,active:true},{id:204,name:'ซอสชีสเข้มข้น',price:10,active:true}]};
+let appData,cart=[],selectedToppings=[],selectedSauces=[],orderType='takeout',paymentMethod='cash',pendingConfirm=null,pendingDual=null,paymentLock=false,deferredPrompt=null,currentMenuSearch='',currentMenuCategory=1;
+const collections=['ingredients','menus','toppings','sauces','orders','heldOrders','kitchenOrders','stockLedger','cashLedger','salesLedger','expenseLedger','wasteLedger','partnerLedger','dailyClosings','notifications','auditLogs','voidedOrderIds','expenses','pettyCashLogs','categories'];
+function normalize(d){d=d&&typeof d==='object'?d:{};[1,2].forEach(n=>{const k='partner'+n+'Pin';if(d[k]!==undefined){d[k+'Hash']=pinHash(String(d[k]));delete d[k]}}); Object.keys(defaults).forEach(k=>{if(d[k]===undefined)d[k]=deep(defaults[k])}); Object.keys(defaults.settings).forEach(k=>{if(d.settings[k]===undefined)d.settings[k]=deep(defaults.settings[k])}); collections.forEach(k=>{if(!Array.isArray(d[k]))d[k]=[]});
+ d.schemaVersion=SCHEMA_VERSION; d.settings.currency=d.settings.currency||d.currency||'บาท'; d.partners=d.partners||deep(defaults.partners); d.activePartnerId=Number(d.activePartnerId)||1;
+ d.ingredients.forEach(i=>{i.id=String(i.id||uid('ING'));i.qty=num(i.qty);i.costPerUnit=num(i.costPerUnit);i.minQty=num(i.minQty??d.settings.defaultMinStock);i.unit=i.unit||d.settings.defaultUnit;i.active=i.active!==false});
+ d.menus.forEach(m=>{m.id=String(m.id||uid('MENU'));m.price=num(m.price);m.bom=Array.isArray(m.bom)?m.bom:[];m.active=m.active!==false;m.categoryId=Number(m.categoryId)||1});
+ d.toppings.forEach(x=>{x.id=String(x.id||uid('TOP'));x.price=num(x.price);x.active=x.active!==false}); d.sauces.forEach(x=>{x.id=String(x.id||uid('SAUCE'));x.price=num(x.price);x.active=x.active!==false});
+ d.orders.forEach(o=>{o.items=Array.isArray(o.items)?o.items:[];o.total=num(o.total);o.costTotal=num(o.costTotal);o.status=o.status||'pending';o.businessDate=o.businessDate||localDate(o.timestamp)});
+ return d;
+}
+function loadData(){try{const raw=localStorage.getItem(KEY)||localStorage.getItem(LEGACY); if(raw){appData=normalize(JSON.parse(raw));return}}catch(e){try{localStorage.setItem(KEY+'_corrupt_'+Date.now(),localStorage.getItem(KEY)||'')}catch(_){}window.__posCorrupt=true} appData=normalize({...deep(defaults),...deep(demo)}); return appData}
+function saveRaw(){try{localStorage.setItem(KEY,JSON.stringify(appData));return true}catch(e){throw new Error('ไม่สามารถบันทึกข้อมูลลง Local Storage ได้')}}
+function saveData(){try{saveRaw();return true}catch(e){showToast(e.message,'danger');return false}}
+function migrateLegacy(){if(!appData)return; if(!appData._migrationDone){if(appData.pettyCashBalance&&appData.cashLedger.length===0)appData.cashLedger.push({id:uid('OPEN'),date:localDate(),timestamp:new Date().toISOString(),type:'opening',amount:num(appData.pettyCashBalance),direction:'in',reason:'ยอดเงินสดตั้งต้นจากระบบเดิม',refType:'migration',refId:null,performedBy:activePartner()}); appData._migrationDone=true; saveRaw()}}
+function activePartner(){return Number(appData.activePartnerId)===2?appData.partner2Name:appData.partner1Name}
+function nextId(arr,p){return uid(p)}
+function audit(action,details,before=null,after=null){appData.auditLogs.unshift({id:uid('AUD'),timestamp:localDateTime(),date:localDate(),partnerId:Number(appData.activePartnerId)||1,performedBy:activePartner(),action,details,before:before===null?undefined:deep(before),after:after===null?undefined:deep(after)});if(appData.auditLogs.length>1000)appData.auditLogs.length=1000}
+function transaction(label,fn){const snap=deep(appData);try{const result=fn();audit(label,typeof result==='string'?result:'');saveRaw();try{renderAll()}catch(e){console.error('Render after transaction failed',e)}return result}catch(e){appData=snap;try{saveRaw()}catch(_){}showToast(e.message||'ทำรายการไม่สำเร็จ','danger');return null}}
+function isClosed(date=localDate()){return appData.dailyClosings.some(x=>x.date===date&&x.status==='closed')}
+function blockIfClosed(date=localDate()){if(isClosed(date)){showToast(`วันที่ ${date} ปิดยอดแล้ว ต้องใช้ Adjustment/Reversal เท่านั้น`,'danger');return true}return false}
+function showToast(msg,type='info'){const c=$('toastContainer');if(!c){alert(msg);return}const d=document.createElement('div');const cls=type==='success'?'bg-emerald-900 border-emerald-400':type==='danger'?'bg-rose-900 border-rose-400':type==='warning'?'bg-amber-900 border-amber-400':'bg-slate-900 border-sky-400';d.className=`pointer-events-auto ${cls} text-white border-l-4 rounded-xl shadow-xl px-3 py-2 text-xs font-bold`;d.textContent=msg;c.prepend(d);setTimeout(()=>d.remove(),3500)}
+function showConfirm(title,message,cb){pendingConfirm=cb;$('confirmTitle').textContent=title;$('confirmMessage').textContent=message;$('confirmYesBtn').onclick=()=>{closeModal('confirmModal');const f=pendingConfirm;pendingConfirm=null;f&&f()};openModal('confirmModal')}
+function openModal(id){const m=$(id);if(!m)return;m.classList.remove('hidden');m.classList.add('flex')}
+function closeModal(id){const m=$(id);if(!m)return;m.classList.add('hidden');m.classList.remove('flex')}
+function moneyText(n){return `${money(n).toFixed(2)} ${appData.settings.currency||'บาท'}`}
+function addNotification(type,title,message,severity='info',refId=null){if(!appData.settings.notificationEnabled)return;appData.notifications.unshift({id:uid('NOTIF'),timestamp:localDateTime(),date:localDate(),type,title,message,severity,read:false,refId});if(appData.notifications.length>500)appData.notifications.length=500;if(appData.settings.browserNotification&&'Notification'in window&&Notification.permission==='granted'){try{new Notification(title,{body:message})}catch(e){}}}
+function requestBrowserNotifications(){if(!('Notification'in window))return showToast('Browser นี้ไม่รองรับ Notification','warning');Notification.requestPermission().then(p=>{appData.settings.browserNotification=p==='granted';saveData();showToast(p==='granted'?'เปิด Browser Notification แล้ว':'ไม่ได้อนุญาต Browser Notification','info')})}
+function readNotification(id){const n=appData.notifications.find(x=>x.id===id);if(n)n.read=true;saveData();renderNotificationsCenter()}
+function markAllNotificationsRead(){appData.notifications.forEach(n=>n.read=true);saveData();renderNotificationsCenter();renderAll()}
+function clearNotifications(){showConfirm('ล้างประวัติแจ้งเตือน','ลบประวัติการแจ้งเตือนทั้งหมดหรือไม่?',()=>transaction('ล้างแจ้งเตือน',()=>{appData.notifications=[]}))}
+function openNotificationCenter(){renderNotificationsCenter();openModal('v4NotifyModal')}
+function closeV4Notify(){closeModal('v4NotifyModal')}
+function renderNotificationsCenter(){const c=$('v4NotifyList');if(!c)return;const list=appData.notifications.slice(0,100);c.innerHTML=list.length?list.map(n=>`<button onclick="readNotification('${n.id}')" class="w-full text-left p-3 rounded-xl ${n.read?'bg-slate-50':'bg-orange-50'} border border-slate-200"><div class="flex justify-between gap-2"><b class="text-xs">${esc(n.title)}</b><span class="text-[9px] text-slate-400">${esc(n.timestamp)}</span></div><div class="text-[11px] text-slate-600 mt-1">${esc(n.message)}</div></button>`).join(''):'<div class="text-center text-xs text-slate-400 py-8">ไม่มีแจ้งเตือน</div>'}
+function injectUI(){if($('v4SettingsCard'))return;const tab=$('tabSettings');const card=document.createElement('div');card.id='v4SettingsCard';card.className='bg-white p-3.5 rounded-2xl shadow-card border border-slate-200/80 space-y-3';card.innerHTML=`<div class="flex items-center justify-between"><div><div class="text-sm font-black">⚙️ V4 Control Center</div><div class="text-[10px] text-slate-500">ตั้งค่าระบบโดยไม่ต้องแก้ Source Code</div></div><button onclick="openNotificationCenter()" class="relative bg-slate-100 px-3 py-2 rounded-xl text-xs font-bold">🔔 <span id="v4Unread">0</span></button></div><div id="v4SettingGroups" class="grid grid-cols-2 gap-2"></div><div class="grid grid-cols-2 gap-2"><button onclick="openDailyClose()" class="py-2 rounded-xl bg-slate-800 text-white font-bold text-xs">🔒 ปิดยอดวันนี้</button><button onclick="factoryResetV4()" class="py-2 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 font-bold text-xs">⚠️ Factory Reset</button></div><div class="grid grid-cols-2 gap-2"><button onclick="exportDataJSON()" class="py-2 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-xs">⬇️ Backup JSON</button><button onclick="requestBrowserNotifications()" class="py-2 rounded-xl bg-blue-50 text-blue-700 font-bold text-xs">🔔 Browser Notify</button></div>`;tab.prepend(card);renderSettingGroups();injectPosFilters()}
+function renderSettingGroups(){const c=$('v4SettingGroups');if(!c)return;const groups=[['STORE','store'],['POS','pos'],['PAYMENT','payment'],['STOCK','stock'],['MENU','menu'],['KITCHEN','kitchen'],['CASH','cash'],['PARTNER','partner'],['SECURITY','security'],['NOTIFICATION','notification'],['BACKUP','backup'],['DISPLAY','display'],['SYSTEM','system']];c.innerHTML=groups.map(g=>`<button onclick="openControlCenter('${g[1]}')" class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700">${g[0]}</button>`).join('')}
+function openControlCenter(group){if(group==='menu'){formModal('MENU MANAGEMENT',`<div class="space-y-2"><button onclick="addNewMenu();closeV4Modal()" class="w-full p-3 rounded-xl bg-orange-50 font-bold">+ เพิ่มเมนู</button><button onclick="duplicateSelectedMenu();closeV4Modal()" class="w-full p-3 rounded-xl bg-blue-50 font-bold">Duplicate เมนู</button><button onclick="addCategory()" class="w-full p-3 rounded-xl bg-emerald-50 font-bold">+ เพิ่ม Category</button><div id="v4MenuManageList" class="space-y-2 max-h-72 overflow-y-auto"></div></div>`,()=>{});renderMenuManageList();return}const maps={pos:{title:'POS Settings',fields:[['queueEnabled','คิว','bool'],['tableEnabled','โต๊ะ','bool'],['takeAwayEnabled','Take Away','bool'],['holdEnabled','Hold Bill','bool'],['notesEnabled','หมายเหตุ','bool'],['toppingEnabled','Topping','bool'],['sauceEnabled','Sauce','bool'],['searchEnabled','Search','bool'],['categoryEnabled','Category','bool'],['confirmClearCart','ยืนยันล้างตะกร้า','bool'],['confirmDelete','ยืนยันลบ','bool'],['preventDoublePayment','กันจ่ายซ้ำ','bool']]},payment:{title:'Payment Settings',fields:[['taxRate','Tax %','num'],['serviceChargeRate','Service Charge %','num']]},stock:{title:'Stock Settings',fields:[['lowStockThresholdPct','Low Stock %','num'],['defaultMinStock','Default Min Stock','num'],['defaultUnit','Default Unit','text'],['allowNegativeStock','Allow Negative Stock','bool'],['requireCost','Require Cost','bool'],['requireStockAdjustmentReason','Require Adjustment Reason','bool'],['wasteApproval','Waste Approval','bool']]},kitchen:{title:'Kitchen Settings',fields:[['kitchenAutoRefresh','Auto Refresh','bool'],['kitchenWarningMinutes','Warning Minutes','num'],['kitchenCriticalMinutes','Critical Minutes','num'],['kitchenSound','Sound','bool'],['kitchenVibrate','Vibration','bool'],['autoHideCompleted','Auto Hide Completed','bool'],['queueDisplay','Queue Display','bool']]},cash:{title:'Cash Settings',fields:[['allowNegativeCash','อนุญาตเงินสดติดลบ','bool'],['blindCashCount','Blind Cash Count','bool'],['cashDifferenceThreshold','Difference Threshold','num'],['quickCash','Quick Cash (comma separated)','text']]},security:{title:'Security Settings',fields:[['requireVoidPin','Require PIN Void','bool'],['requireDeletePin','Require PIN Delete','bool'],['requirePricePin','Require PIN Price Change','bool'],['requireDailyClosePin','Require PIN Daily Close','bool'],['dualPinApproval','Dual PIN Approval','bool'],['autoLockMinutes','Auto Lock Minutes','num']]},notification:{title:'Notification Settings',fields:[['notificationEnabled','Notification Engine','bool'],['browserNotification','Browser Notification','bool']]},display:{title:'Display Settings',fields:[['compactMode','Compact Mode','bool'],['haptic','Haptic','bool']]},system:{title:'System',fields:[['currency','Currency','text']]}};if(group==='store'){formModal('STORE',`<div class="space-y-2"><input id="set_storeName" class="w-full p-3 border rounded-xl" value="${esc(appData.storeName)}" placeholder="ชื่อร้าน"><input id="set_phone" class="w-full p-3 border rounded-xl" value="${esc(appData.phone||'')}" placeholder="โทรศัพท์"><input id="set_promptpay" class="w-full p-3 border rounded-xl" value="${esc(appData.promptpay)}" placeholder="PromptPay"><input id="set_fixed" type="number" class="w-full p-3 border rounded-xl" value="${appData.monthlyFixedCost}" placeholder="Fixed Cost/เดือน"></div>`,()=>{const name=$('set_storeName').value.trim();if(!name)throw new Error('กรุณาระบุชื่อร้าน');appData.storeName=name;appData.phone=$('set_phone').value.trim();appData.promptpay=$('set_promptpay').value.trim();appData.monthlyFixedCost=Math.max(0,num($('set_fixed').value));closeV4Modal();transaction('เปลี่ยน Store Settings','Apply store settings');showToast('บันทึกและ Apply ทันทีแล้ว','success')});return}if(group==='partner'){formModal('PARTNER 50/50',`<div class="space-y-2"><input id="set_p1" class="w-full p-3 border rounded-xl" value="${esc(appData.partner1Name)}" placeholder="หุ้นส่วน A"><input id="set_p1pin" maxlength="4" class="w-full p-3 border rounded-xl" value="" placeholder="PIN A ใหม่ (เว้นว่าง=ไม่เปลี่ยน)"><input id="set_p2" class="w-full p-3 border rounded-xl" value="${esc(appData.partner2Name)}" placeholder="หุ้นส่วน B"><input id="set_p2pin" maxlength="4" class="w-full p-3 border rounded-xl" value="" placeholder="PIN B ใหม่ (เว้นว่าง=ไม่เปลี่ยน)"></div>`,()=>{const v1=$('set_p1pin').value,v2=$('set_p2pin').value;if((v1&&!/^\d{4}$/.test(v1))||(v2&&!/^\d{4}$/.test(v2)))throw new Error('PIN ต้องเป็นตัวเลข 4 หลัก');appData.partner1Name=$('set_p1').value.trim();if(v1)appData.partner1PinHash=pinHash(v1);appData.partner2Name=$('set_p2').value.trim();if(v2)appData.partner2PinHash=pinHash(v2);closeV4Modal();transaction('แก้ไข Partner Settings','อัปเดตชื่อ/PIN หุ้นส่วน');showToast('บันทึก Partner Settings แล้ว','success')});return}if(group==='backup'){formModal('BACKUP / RESTORE',`<div class="space-y-2"><button onclick="exportDataJSON();closeV4Modal()" class="w-full p-3 rounded-xl bg-emerald-50 font-bold">Export JSON</button><label class="block w-full p-3 rounded-xl bg-blue-50 font-bold text-center">Import JSON<input type="file" accept="application/json" class="hidden" onchange="importDataJSON(event)"></label><button onclick="resetDemoData()" class="w-full p-3 rounded-xl bg-amber-50 font-bold">Reset Demo Data</button></div>`,null);return}const cfg=maps[group]||maps.system;const body=cfg.fields.map(([k,l,t])=>{const v=appData.settings[k];if(t==='bool')return `<label class="flex items-center justify-between p-3 bg-slate-50 rounded-xl"><span class="text-xs font-semibold">${l}</span><input id="cfg_${k}" type="checkbox" ${v?'checked':''} class="w-5 h-5"></label>`;return `<label class="block text-xs font-semibold">${l}<input id="cfg_${k}" type="${t==='num'?'number':'text'}" class="w-full p-3 mt-1 border rounded-xl" value="${esc(Array.isArray(v)?v.join(','):v??'')}"></label>`}).join('');formModal(cfg.title,`<div class="space-y-2">${body}</div>`,()=>{cfg.fields.forEach(([k,l,t])=>{let v=$('cfg_'+k).type==='checkbox' ? $('cfg_'+k).checked : $('cfg_'+k).value;if(t==='num')v=num(v);if(k==='quickCash')v=String(v).split(',').map(num).filter(x=>x>0);appData.settings[k]=v});closeV4Modal();transaction(`เปลี่ยน ${group} Settings`,`Apply ${group} settings`);showToast('บันทึกและ Apply ทันทีแล้ว','success')})}
+function formModal(title,body,onSave){$('v4ModalTitle').textContent=title;$('v4ModalBody').innerHTML=body||'';$('v4SaveBtn').onclick=()=>{try{if(onSave)onSave();else closeV4Modal()}catch(e){showToast(e.message||'ข้อมูลไม่ถูกต้อง','danger')}};openModal('v4Modal')}
+function closeV4Modal(){closeModal('v4Modal')}
+function injectPosFilters(){const ml=$('menuList');if(!ml||$('v4PosFilters'))return;const wrap=document.createElement('div');wrap.id='v4PosFilters';wrap.className='mb-2 space-y-2';wrap.innerHTML=`<div class="flex gap-2"><input id="v4MenuSearch" class="flex-1 p-2.5 rounded-xl border text-xs" placeholder="🔎 ค้นหาเมนู" oninput="setMenuSearch(this.value)"><select id="v4Category" class="p-2.5 rounded-xl border text-xs" onchange="setMenuCategory(this.value)"></select></div>`;ml.parentNode.insertBefore(wrap,ml);renderMenuFilters()}
+function setMenuSearch(v){currentMenuSearch=v||'';renderMenus()}
+function setMenuCategory(v){currentMenuCategory=Number(v)||1;renderMenus()}
+function renderMenuFilters(){const s=$('v4Category');if(!s)return;s.innerHTML=appData.categories.filter(c=>c.active!==false).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');s.value=String(currentMenuCategory)}
+function renderMenusBase(){renderMenuFilters();const c=$('menuList');if(!c)return;const q=appData.settings.searchEnabled?currentMenuSearch.toLowerCase():'';const list=appData.menus.filter(m=>m.active!==false&&(!appData.settings.categoryEnabled||currentMenuCategory===1||Number(m.categoryId)===currentMenuCategory)&&(!q||m.name.toLowerCase().includes(q)));c.innerHTML=list.map(m=>`<button onclick="addToCart('${m.id}')" class="bg-white border border-slate-200 rounded-xl p-3 text-left shadow-sm card-touch"><img data-menu-img="${m.id}" class="hidden w-full h-20 object-cover rounded-lg mb-2" alt=""><div class="font-bold text-xs">${esc(m.name)}</div><div class="text-brand-600 font-black mt-1">${money(m.price).toFixed(2)}</div></button>`).join('')||'<div class="col-span-2 text-center text-xs text-slate-400 py-8">ไม่พบเมนู</div>'}
+function renderToppings(){const c=$('toppingList');if(!c)return;c.innerHTML=appData.settings.toppingEnabled?appData.toppings.filter(x=>x.active!==false).map(x=>`<button onclick="toggleTopping('${x.id}')" class="px-3 py-2 rounded-xl border text-[11px] ${selectedToppings.includes(String(x.id))?'bg-brand-500 text-white':'bg-white'}">${esc(x.name)} +${money(x.price)}</button>`).join(''):'<span class="text-[10px] text-slate-400">ปิดใช้งาน Topping</span>'}
+function renderSauces(){const c=$('sauceList');if(!c)return;c.innerHTML=appData.settings.sauceEnabled?appData.sauces.filter(x=>x.active!==false).map(x=>`<button onclick="toggleSauce('${x.id}')" class="px-3 py-2 rounded-xl border text-[11px] ${selectedSauces.includes(String(x.id))?'bg-amber-500 text-white':'bg-white'}">${esc(x.name)}${x.price?` +${money(x.price)}`:''}</button>`).join(''):'<span class="text-[10px] text-slate-400">ปิดใช้งาน Sauce</span>'}
+function toggleTopping(id){id=String(id);if(selectedToppings.includes(id))selectedToppings=selectedToppings.filter(x=>x!==id);else{if(selectedToppings.length>=num(appData.settings.maxToppings))return showToast('เลือก Topping ได้สูงสุดตามที่ตั้งค่า','warning');selectedToppings.push(id)}renderToppings()}
+function toggleSauce(id){id=String(id);if(selectedSauces.includes(id))selectedSauces=selectedSauces.filter(x=>x!==id);else{if(selectedSauces.length>=num(appData.settings.maxSauces))return showToast(`เลือกซอสได้สูงสุด ${appData.settings.maxSauces} ซอส`,'warning');selectedSauces.push(id)}renderSauces()}
+function setOrderType(t){orderType=t;$('btnTypeTakeout')?.classList.toggle('bg-brand-500',t==='takeout');$('btnTypeEatin')?.classList.toggle('bg-brand-500',t==='eatin');$('tableInputBox')?.classList.toggle('hidden',t!=='eatin');renderAll()}
+function menuCost(m){return (m.bom||[]).reduce((s,b)=>{const i=appData.ingredients.find(x=>String(x.id)===String(b.ingredientId));return s+num(b.qty)*num(i?.costPerUnit)},0)}
+function addToCart(menuId){hap();const m=appData.menus.find(x=>String(x.id)===String(menuId)&&x.active!==false);if(!m)return showToast('เมนูไม่พร้อมขาย','warning');if(appData.settings.requireCost&&!(m.bom||[]).length)return showToast('เมนูนี้ยังไม่ได้ตั้ง BOM (สูตรวัตถุดิบ)','warning');const tops=appData.toppings.filter(x=>selectedToppings.includes(String(x.id))),sauces=appData.sauces.filter(x=>selectedSauces.includes(String(x.id)));const addons=[...tops.map(x=>x.name),...sauces.map(x=>x.name)];const addonPrice=tops.reduce((s,x)=>s+num(x.price),0)+sauces.reduce((s,x)=>s+num(x.price),0);const snapshot=(m.bom||[]).map(b=>{const i=appData.ingredients.find(x=>String(x.id)===String(b.ingredientId));return {ingredientId:String(b.ingredientId),ingredientName:i?.name||'',qty:num(b.qty),unit:i?.unit||'',unitCost:num(i?.costPerUnit)}});const key=JSON.stringify([m.id,addons]);const ex=cart.find(x=>x.key===key);if(ex)ex.qty++;else cart.push({key,menuId:String(m.id),name:m.name,toppings:tops.map(x=>x.name),sauces:sauces.map(x=>x.name),addonNames:addons.join(', '),unitPrice:money(m.price+addonPrice),itemCost:money(snapshot.reduce((s,b)=>s+b.qty*b.unitCost,0)),qty:1,bomSnapshot:snapshot});selectedToppings=[];selectedSauces=[];renderToppings();renderSauces();renderCart()}
+function cartSub(){return cart.reduce((s,x)=>s+x.unitPrice*x.qty,0)}
+function calcTotal(){const sub=money(cartSub()),sv=money(sub*num(appData.settings.serviceChargeRate)/100),tx=money((sub+sv)*num(appData.settings.taxRate)/100);return money(sub+sv+tx)}
+function renderCart(){const c=$('cartItems');if(!c)return;c.innerHTML=cart.map((x,i)=>`<div class="p-2.5 bg-slate-50 rounded-xl"><div class="flex justify-between gap-2"><div><b class="text-xs">${esc(x.name)}</b><div class="text-[10px] text-slate-500">${esc(x.addonNames||'')}</div></div><b class="text-xs">${money(x.unitPrice*x.qty).toFixed(2)}</b></div><div class="flex items-center gap-2 mt-2"><button onclick="changeCartQty(${i},-1)" class="w-9 h-9 rounded-lg bg-white border">−</button><span class="font-bold text-sm">${x.qty}</span><button onclick="changeCartQty(${i},1)" class="w-9 h-9 rounded-lg bg-white border">+</button><button onclick="removeFromCart(${i})" class="ml-auto text-rose-500 p-2">🗑</button></div></div>`).join('')||'<div class="text-center text-xs text-slate-400 py-6">ยังไม่มีรายการ</div>';const t=calcTotal();if($('cartTotal'))$('cartTotal').textContent=moneyText(t)}
+function changeCartQty(i,d){if(!cart[i])return;cart[i].qty+=d;if(cart[i].qty<=0)cart.splice(i,1);renderCart()}
+function removeFromCart(i){if(!cart[i])return;cart.splice(i,1);renderCart()}
+function clearCart(){if(!cart.length)return;if(appData.settings.confirmClearCart)return showConfirm('ล้างตะกร้า','ต้องการล้างรายการทั้งหมดหรือไม่?',()=>{cart=[];selectedToppings=[];selectedSauces=[];renderAll()});cart=[];selectedToppings=[];selectedSauces=[];renderAll()}
+function holdOrder(){if(!cart.length)return showToast('ยังไม่มีรายการในตะกร้า','warning');if(blockIfClosed())return;const h={id:uid('HOLD'),createdAt:localDateTime(),queue:appData.currentQueue,type:orderType,table:$('orderTableNo')?.value||'',note:$('orderNote')?.value||'',items:deep(cart)};transaction('พักบิล',()=>{appData.heldOrders.unshift(h)});cart=[];selectedToppings=[];selectedSauces=[];renderAll();showToast('พักบิลเรียบร้อยแล้ว','success')}
+function restoreHeldOrder(id){const h=appData.heldOrders.find(x=>x.id===id);if(!h)return;const go=()=>{const items=deep(h.items);if(transaction('เรียกบิลกลับ',()=>{appData.heldOrders=appData.heldOrders.filter(x=>x.id!==id);return id})===null)return;cart=items;switchTab('order');setOrderType(h.type||'takeout');if($('orderTableNo'))$('orderTableNo').value=h.table||'';if($('orderNote'))$('orderNote').value=h.note||'';renderCart();showToast('เรียกบิลกลับมาแล้ว','success')};if(cart.length)showConfirm('เรียกบิลกลับ','ตะกร้าปัจจุบันจะถูกแทนที่ ดำเนินการต่อหรือไม่?',go);else go()}
+function deleteHeldOrder(id){const go=()=>transaction('ลบบิลพัก',()=>{appData.heldOrders=appData.heldOrders.filter(x=>x.id!==id)});if(appData.settings.confirmDelete)secureConfirm('ลบบิลพัก','ต้องการลบบิลพักนี้หรือไม่?',go);else go()}
+function checkout(){if(!cart.length)return showToast('กรุณาเลือกเมนูก่อนรับเงิน','warning');const total=calcTotal();$('modalQueueNumber').textContent=(appData.settings.queueEnabled&&appData.settings.queueDisplay)?`คิว #${appData.currentQueue}`:'';$('modalTotalAmount').textContent=moneyText(total);$('modalPromptpayNo').textContent=appData.promptpay||'-';$('cashReceivedInput').value='';$('cashChangeDisplay').textContent='0.00 บาท';switchPayMethod('cash');openModal('paymentModal')}
+function switchPayMethod(m){renderQuickCash();paymentMethod=m;$('payCashSection')?.classList.toggle('hidden',m!=='cash');$('payQrSection')?.classList.toggle('hidden',m!=='qr');$('payOtherSection')?.classList.toggle('hidden',m!=='other');$('payTabCashBtn')?.classList.toggle('bg-white',m==='cash');$('payTabQrBtn')?.classList.toggle('bg-white',m==='qr');$('payTabOtherBtn')?.classList.toggle('bg-white',m==='other');if(m==='qr'&&$('qrImage')){$('qrImage').onerror=()=>showToast('โหลด QR ไม่ได้ (ออฟไลน์) ให้ลูกค้าโอนเข้า PromptPay '+(appData.promptpay||''),'warning');$('qrImage').src=appData.promptpay?`https://promptpay.io/${encodeURIComponent(appData.promptpay)}/${encodeURIComponent(money(calcTotal()))}.png`:''}}
+function setCashTender(v){const i=$('cashReceivedInput');if(!i)return;const n=num(v);i.value=n;calculateChange()}
+function setExactCash(){const t=calcTotal();$('cashReceivedInput').value=money(t);calculateChange()}
+function calculateChange(){const t=calcTotal(),r=num($('cashReceivedInput')?.value),d=r-t;if($('cashChangeDisplay')){$('cashChangeDisplay').textContent=d<0?`ขาด ${money(-d).toFixed(2)}`:money(d).toFixed(2);$('cashChangeDisplay').className=d<0?'text-2xl font-black text-rose-600':'text-2xl font-black text-emerald-600'}}
+function ledgerStock(ingredientId,qty,direction,reason,refType,refId,unitCost){const i=appData.ingredients.find(x=>String(x.id)===String(ingredientId));if(!i)throw new Error('ไม่พบวัตถุดิบ');const q=Math.abs(num(qty));if(q<=0)throw new Error('จำนวน Stock ต้องมากกว่า 0');if(direction==='out'&&!appData.settings.allowNegativeStock&&i.qty<q)throw new Error(`Stock ไม่พอ: ${i.name} เหลือ ${i.qty} ${i.unit}`);i.qty=qtyValue(i.qty+(direction==='in'?q:-q));appData.stockLedger.push({id:uid('STK'),date:localDate(),timestamp:new Date().toISOString(),ingredientId:i.id,ingredientName:i.name,qty:q,direction,unit:i.unit,unitCost:costValue(unitCost??i.costPerUnit),reason,refType,refId,performedBy:activePartner()})}
+function ledgerCash(type,amount,direction,reason,refType,refId){const a=money(amount);if(a<=0)throw new Error('จำนวนเงินต้องมากกว่า 0');if(direction==='out'&&!appData.settings.allowNegativeCash&&cashBalance()<a)throw new Error('เงินสดในลิ้นชักไม่พอ');appData.cashLedger.push({id:uid('CASH'),date:localDate(),timestamp:new Date().toISOString(),type,amount:a,direction,reason,refType,refId,performedBy:activePartner()})}
+function ledgerPartner(type,partnerId,amount,reason,refType,refId){const a=money(amount);if(a<=0)throw new Error('จำนวนเงินต้องมากกว่า 0');appData.partnerLedger.push({id:uid('PARTNER'),date:localDate(),timestamp:new Date().toISOString(),partnerId:Number(partnerId),partnerName:Number(partnerId)===2?appData.partner2Name:appData.partner1Name,type,amount:a,reason,refType,refId,performedBy:activePartner()})}
+function cashBalance(){return money(appData.cashLedger.reduce((s,r)=>s+(r.direction==='out'?-num(r.amount):num(r.amount)),0))}
+function confirmPaymentSuccess(){if(appData.settings.preventDoublePayment&&paymentLock)return;paymentLock=true;try{if(blockIfClosed())return;if(!cart.length)throw new Error('ตะกร้าว่าง');const total=money(calcTotal());const received=num($('cashReceivedInput')?.value);if(paymentMethod==='cash'&&received<total)throw new Error('จำนวนเงินสดที่รับมาไม่พอ');const items=[];for(const c of cart){for(let q=0;q<c.qty;q++)items.push({menuId:c.menuId,name:c.name,price:c.unitPrice,toppings:deep(c.toppings),sauces:deep(c.sauces),addonNames:c.addonNames,bomSnapshot:deep(c.bomSnapshot)})}const need={};items.forEach(i=>(i.bomSnapshot||[]).forEach(b=>need[b.ingredientId]=(need[b.ingredientId]||0)+num(b.qty)));const id=uid('ORD');const committed=transaction('รับชำระเงิน',()=>{Object.entries(need).forEach(([iid,q])=>{const ing=appData.ingredients.find(x=>String(x.id)===String(iid));if(!ing)throw new Error('BOM อ้างอิงวัตถุดิบที่ไม่มีอยู่');if(!appData.settings.allowNegativeStock&&ing.qty<q)throw new Error(`Stock ไม่พอ: ${ing.name}`)});const cost=items.reduce((s,i)=>s+i.bomSnapshot.reduce((a,b)=>a+b.qty*b.unitCost,0),0);const order={id,queue:appData.currentQueue,type:orderType,payMethod:paymentMethod,table:$('orderTableNo')?.value||'',timestamp:new Date().toISOString(),businessDate:localDate(),items,subtotal:money(cartSub()),total,costTotal:money(cost),note:appData.settings.notesEnabled?($('orderNote')?.value||''):'',received:money(received),change:paymentMethod==='cash'?money(received-total):0,status:'NEW',bomSnapshot:deep(items.flatMap(i=>i.bomSnapshot))};appData.orders.unshift(order);appData.kitchenOrders.unshift({orderId:id,status:'NEW',createdAt:order.timestamp});appData.salesLedger.push({id:uid('SALE'),date:localDate(),timestamp:new Date().toISOString(),orderId:id,total,costTotal:order.costTotal,paymentMethod:paymentMethod,status:'completed',performedBy:activePartner()});Object.entries(need).forEach(([iid,q])=>{const ing=appData.ingredients.find(x=>String(x.id)===String(iid));ledgerStock(iid,q,'out','ขายสินค้า','sale',id,ing.costPerUnit)});if(paymentMethod==='cash')ledgerCash('sale',total,'in',`ขายออเดอร์ ${order.queue}`,'order',id);addNotification('PAYMENT','ชำระเงินสำเร็จ',`ออเดอร์ #${order.queue} ${moneyText(total)}`,'success',id);addNotification('NEW_ORDER','ออเดอร์ใหม่',`ส่งครัวคิว #${order.queue}`,'info',id);appData.currentQueue++;checkLowStock()});if(committed===null)return;closeModal('paymentModal');cart=[];selectedToppings=[];selectedSauces=[];if($('orderNote'))$('orderNote').value='';renderAll();showToast('ชำระเงินสำเร็จ','success');alertFx()}catch(e){showToast(e.message,'danger')}finally{setTimeout(()=>paymentLock=false,350)}}
+function isLow(i){return i.qty<=0||(i.minQty>0&&i.qty<=i.minQty*(1+num(appData.settings.lowStockThresholdPct)/100))}
+function checkLowStock(){if(!appData.settings.lowStockEnabled)return;appData.ingredients.forEach(i=>{if(i.active!==false&&isLow(i)&&!appData.notifications.some(n=>n.type==='STOCK_LOW'&&n.refId===i.id&&!n.read&&n.date===localDate()))addNotification('STOCK_LOW','Stock ต่ำ',`${i.name} เหลือ ${i.qty} ${i.unit} / Min ${i.minQty}`,'warning',i.id)})}
+function voidOrder(id){const o=appData.orders.find(x=>x.id===id);if(!o||o.status==='VOID')return;if(blockIfClosed())return;const made=['PREPARING','READY','SERVED'].includes(o.status),past=o.businessDate!==localDate();formModal(`Void คิว #${o.queue}`,`<div class="space-y-2"><div class="text-xs text-slate-600">${past?'⚠️ บิลของวันที่ '+esc(o.businessDate)+' จะบันทึกเป็นรายการปรับปรุงในวันนี้<br>':''}ยอด ${moneyText(o.total)} • สถานะ ${esc(o.status)}</div><select id="v4VoidReason" class="w-full p-3 border rounded-xl"><option>ลูกค้ายกเลิก</option><option>คีย์ผิด</option><option>ทำผิด/ของเสีย</option><option>อื่น ๆ</option></select><select id="v4VoidRestock" class="w-full p-3 border rounded-xl"><option value="1" ${made?'':'selected'}>คืนวัตถุดิบเข้าสต็อค (ยังไม่ได้ทำ)</option><option value="0" ${made?'selected':''}>ไม่คืนสต็อค — บันทึกเป็น Waste (ทำแล้ว)</option></select></div>`,()=>{const reason=$('v4VoidReason').value,restock=$('v4VoidRestock').value==='1';closeV4Modal();const go=()=>doVoid(o.id,restock,reason);if(appData.settings.requireVoidPin)requestDualPinApproval('Void Order',go);else showConfirm('ยืนยัน Void',`ยกเลิกออเดอร์ #${o.queue} และคืนเงินหรือไม่?`,go)})}
+function doVoid(id,restock,reason){const o=appData.orders.find(x=>x.id===id);if(!o||o.status==='VOID')return;if(blockIfClosed())return;const r=transaction('Void Order',()=>{const need={};o.items.forEach(i=>(i.bomSnapshot||[]).forEach(b=>{const n=need[b.ingredientId]||(need[b.ingredientId]={qty:0,name:b.ingredientName,unit:b.unit,cost:0});n.qty+=num(b.qty);n.cost+=num(b.qty)*num(b.unitCost)}));Object.entries(need).forEach(([iid,n])=>{if(restock)ledgerStock(iid,n.qty,'in','คืน Stock จาก Void','void',o.id);else appData.wasteLedger.unshift({id:uid('WASTELOG'),date:localDate(),timestamp:new Date().toISOString(),ingredientId:iid,ingredientName:n.name,qty:qtyValue(n.qty),unit:n.unit,reason:'Void: '+reason,cost:money(n.cost),performedBy:activePartner()})});if(o.payMethod==='cash')ledgerCash('void_refund',o.total,'out',`คืนเงิน Void #${o.queue}`,'void',o.id);const sale=appData.salesLedger.find(x=>x.orderId===o.id&&x.status==='completed');if(sale)sale.status='reversed';appData.salesLedger.push({id:uid('SALE_REV'),date:localDate(),timestamp:new Date().toISOString(),orderId:o.id,total:-o.total,costTotal:-o.costTotal,paymentMethod:o.payMethod,status:'reversal',performedBy:activePartner()});o.status='VOID';o.voidedAt=localDateTime();o.voidReason=reason;o.voidRestocked=restock;o.voidAdjustment=o.businessDate!==localDate();appData.voidedOrderIds.push(o.id);appData.kitchenOrders=appData.kitchenOrders.filter(k=>k.orderId!==o.id);addNotification('VOID','Void Order',`ยกเลิกคิว #${o.queue} (${reason})`,'warning',o.id);return `Void #${o.queue}: ${reason} / ${restock?'คืนสต็อค':'บันทึก Waste'}${o.voidAdjustment?' / Adjustment บิลวันที่ '+o.businessDate:''}`});if(r!==null)showToast('Void สำเร็จ','warning')}
+function updateOrderStatus(id,status){const o=appData.orders.find(x=>x.id===id);if(!o||o.status==='VOID')return;transaction('เปลี่ยนสถานะออเดอร์',()=>{o.status=status;const k=appData.kitchenOrders.find(x=>x.orderId===id);if(k)k.status=status;if(status==='READY')alertFx();if(status==='READY')addNotification('SYSTEM','Kitchen เสร็จแล้ว',`คิว #${o.queue} พร้อมเสิร์ฟ`,'success',id)})}
+function updateKitchenStatus(id,status){updateOrderStatus(id,status)}
+function renderHeldOrders(){const c=$('heldOrdersList');if(!c)return;c.innerHTML=appData.heldOrders.map(h=>`<div class="p-3 rounded-xl bg-slate-50 border"><div class="flex justify-between"><b class="text-xs">คิว #${h.queue}</b><span class="text-[10px]">${esc(h.createdAt)}</span></div><div class="text-[11px] mt-1">${h.items.length} รายการ • ${money(h.items.reduce((s,x)=>s+x.unitPrice*x.qty,0))}</div><div class="flex gap-2 mt-2"><button onclick="restoreHeldOrder('${h.id}')" class="flex-1 p-2 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-bold">เรียกคืน</button><button onclick="deleteHeldOrder('${h.id}')" class="p-2 rounded-lg bg-rose-50 text-rose-700">ลบ</button></div></div>`).join('')||'<div class="text-center text-xs text-slate-400 py-8">ไม่มีบิลพัก</div>'}
+function renderKitchen(){const c=$('kitchenTicketsContainer');if(!c)return;const active=appData.orders.filter(o=>['NEW','PREPARING','READY'].includes(o.status));const list=active.concat(appData.settings.autoHideCompleted?[]:appData.orders.filter(o=>o.status==='SERVED'&&Date.now()-new Date(o.timestamp).getTime()<15*60000));c.innerHTML=list.map(o=>{const age=Math.floor((Date.now()-new Date(o.timestamp).getTime())/60000),critical=age>=num(appData.settings.kitchenCriticalMinutes),warn=age>=num(appData.settings.kitchenWarningMinutes);return `<div class="p-3 rounded-xl border ${o.status==='SERVED'?'opacity-60 bg-slate-100':critical?'border-rose-400 bg-rose-50':warn?'border-amber-300 bg-amber-50':'bg-white'}"><div class="flex justify-between"><b>คิว #${o.queue}</b><span class="text-[10px]">${age} นาที</span></div><div class="text-[11px]">${o.type==='eatin'?'โต๊ะ '+esc(o.table||'-'):'กลับบ้าน'} ${o.note?'• '+esc(o.note):''}</div>${o.items.map(i=>`<div class="text-xs mt-1">${esc(i.name)} × 1 ${i.addonNames?`<span class="text-slate-500">(${esc(i.addonNames)})</span>`:''}</div>`).join('')}<div class="flex gap-2 mt-3">${o.status==='NEW'?`<button onclick="updateKitchenStatus('${o.id}','PREPARING')" class="flex-1 p-2 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold">เริ่มทำ</button>`:''}${o.status==='PREPARING'?`<button onclick="updateKitchenStatus('${o.id}','READY')" class="flex-1 p-2 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-bold">เสร็จแล้ว</button>`:''}${o.status==='READY'?`<button onclick="updateKitchenStatus('${o.id}','SERVED')" class="flex-1 p-2 rounded-lg bg-slate-800 text-white text-xs font-bold">เสิร์ฟแล้ว</button>`:''}<button onclick="voidOrder('${o.id}')" class="p-2 rounded-lg bg-rose-50 text-rose-700">Void</button></div></div>`}).join('')||'<div class="text-center text-xs text-slate-400 py-8">ไม่มีคิวค้างทำ</div>';const s=$('kitchenSummaryContainer');if(s){const map={};active.forEach(o=>o.items.forEach(i=>map[i.name]=(map[i.name]||0)+1));s.innerHTML=Object.entries(map).map(([n,q])=>`<div class="flex justify-between p-2 bg-slate-50 rounded-lg text-xs"><span>${esc(n)}</span><b>×${q}</b></div>`).join('')||'<div class="text-xs text-slate-400">ไม่มีรายการ</div>'}}
+function renderStock(){const c=$('ingredientListContainer');if(!c)return;c.innerHTML=appData.ingredients.filter(i=>i.active!==false).map(i=>{const low=isLow(i);return `<div class="p-3 rounded-xl border ${low?'border-rose-200 bg-rose-50':'bg-white'}"><div class="flex justify-between"><div><b class="text-xs">${esc(i.name)}</b><div class="text-[10px] text-slate-500">${money(i.costPerUnit)}/${esc(i.unit)} • Min ${i.minQty}</div></div><b class="text-sm">${money(i.qty)} ${esc(i.unit)}</b></div><div class="flex gap-2 mt-2"><button onclick="restockIngredient('${i.id}')" class="flex-1 p-2 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-bold">ซื้อ/เติม</button><button onclick="showAddWasteModal('${i.id}')" class="p-2 rounded-lg bg-rose-50 text-rose-700">Waste</button><button onclick="adjustStock('${i.id}')" class="p-2 rounded-lg bg-blue-50 text-blue-700">ปรับ</button><button onclick="deactivateIngredient('${i.id}')" class="p-2 rounded-lg bg-slate-100">ปิด</button></div></div>`}).join('')||'<div class="text-center text-xs text-slate-400 py-8">ไม่มีวัตถุดิบ</div>';const w=$('wasteLogContainer');if(w)w.innerHTML=appData.wasteLedger.slice(0,50).map(x=>`<div class="p-2 bg-slate-50 rounded-lg text-[10px]">${esc(x.ingredientName)} −${x.qty} ${esc(x.unit)} • ${esc(x.reason)} • ${money(x.cost)}</div>`).join('')}
+function showAddIngredientModal(){formModal('เพิ่มวัตถุดิบ',`<div class="space-y-2"><input id="v4IngName" class="w-full p-3 border rounded-xl" placeholder="ชื่อวัตถุดิบ"><input id="v4IngQty" type="number" class="w-full p-3 border rounded-xl" placeholder="จำนวนเริ่มต้น"><input id="v4IngUnit" class="w-full p-3 border rounded-xl" value="${esc(appData.settings.defaultUnit)}" placeholder="หน่วย"><input id="v4IngCost" type="number" step="0.0001" class="w-full p-3 border rounded-xl" placeholder="ต้นทุน/หน่วย"><input id="v4IngMin" type="number" class="w-full p-3 border rounded-xl" value="${appData.settings.defaultMinStock}" placeholder="Min Stock"></div>`,()=>{const name=$('v4IngName').value.trim(),qty=num($('v4IngQty').value),unit=$('v4IngUnit').value.trim(),cost=num($('v4IngCost').value),min=num($('v4IngMin').value);if(!name||!unit||qty<0||cost<0||min<0)throw new Error('ข้อมูลวัตถุดิบไม่ถูกต้อง');if(appData.ingredients.some(i=>i.name.trim().toLowerCase()===name.toLowerCase()&&i.active!==false))throw new Error('มีวัตถุดิบชื่อนี้อยู่แล้ว');transaction('เพิ่มวัตถุดิบ',()=>{const id=uid('ING');appData.ingredients.push({id,name,qty,unit,costPerUnit:cost,minQty:min,active:true});if(qty>0)ledgerStock(id,qty,'in','ยอดตั้งต้น','ingredient',id,cost)});closeV4Modal();showToast('เพิ่มวัตถุดิบแล้ว','success')})}
+function restockIngredient(id){const i=appData.ingredients.find(x=>String(x.id)===String(id));if(!i)return;formModal(`ซื้อ ${i.name}`,`<div class="space-y-2"><input id="v4RestockQty" type="number" step="0.001" class="w-full p-3 border rounded-xl" placeholder="จำนวน"><input id="v4RestockCost" type="number" step="0.01" class="w-full p-3 border rounded-xl" placeholder="ราคารวม"></div>`,()=>{const q=num($('v4RestockQty').value),total=num($('v4RestockCost').value);if(q<=0||total<=0)throw new Error('จำนวนและราคารวมต้องมากกว่า 0');const unitCost=total/q;const committed=transaction('ซื้อวัตถุดิบ',()=>{const oldQ=i.qty,oldC=i.costPerUnit;i.costPerUnit=costValue(((oldQ*oldC)+(q*unitCost))/(oldQ+q));const ref=uid('BUY');ledgerStock(i.id,q,'in','ซื้อวัตถุดิบ','purchase',ref,unitCost);ledgerCash('purchase',total,'out',`ซื้อ ${i.name}`,'purchase',ref)});if(committed===null)return;closeV4Modal();showToast('เพิ่ม Stock และบันทึกเงินสดแล้ว','success')})}
+function showAddWasteModal(id){const list=appData.ingredients.filter(i=>i.active!==false);formModal('บันทึก Waste',`<div class="space-y-2"><select id="v4WasteIng" class="w-full p-3 border rounded-xl">${list.map(i=>`<option value="${i.id}" ${String(i.id)===String(id)?'selected':''}>${esc(i.name)}</option>`).join('')}</select><input id="v4WasteQty" type="number" step="0.001" class="w-full p-3 border rounded-xl" placeholder="จำนวน"><select id="v4WasteReason" class="w-full p-3 border rounded-xl"><option>หมดอายุ</option><option>เสีย</option><option>ทำตก</option><option>เตรียมเกิน</option><option>ของเสียจากการผลิต</option><option>อื่น ๆ</option></select></div>`,()=>{const iid=$('v4WasteIng').value,q=num($('v4WasteQty').value),reason=$('v4WasteReason').value,i=appData.ingredients.find(x=>String(x.id)===String(iid));if(!i||q<=0)throw new Error('ข้อมูล Waste ไม่ถูกต้อง');const cost=q*i.costPerUnit;const run=()=>transaction('บันทึก Waste',()=>{ledgerStock(i.id,q,'out','Waste: '+reason,'waste',uid('WASTE'),i.costPerUnit);appData.wasteLedger.unshift({id:uid('WASTELOG'),date:localDate(),timestamp:new Date().toISOString(),ingredientId:i.id,ingredientName:i.name,qty:q,unit:i.unit,reason,cost,performedBy:activePartner()});addNotification('STOCK_LOW','บันทึก Waste',`${i.name} ${q} ${i.unit}`,'warning',i.id)});closeV4Modal();const done=()=>{if(run()!==null)showToast('บันทึก Waste และตัด Stock แล้ว','success')};if(appData.settings.wasteApproval)requestDualPinApproval('อนุมัติ Waste',done);else done()})}
+function deactivateIngredient(id){const i=appData.ingredients.find(x=>String(x.id)===String(id));if(!i)return;secureConfirm('ปิดใช้งานวัตถุดิบ',`ปิด ${i.name} โดยไม่ลบประวัติใช่หรือไม่?`,()=>transaction('ปิดใช้งานวัตถุดิบ',()=>{i.active=false}))}
+function addNewSauce(){formModal('เพิ่ม Sauce',`<input id="v4SauceName" class="w-full p-3 border rounded-xl mb-2" placeholder="ชื่อ Sauce"><input id="v4SaucePrice" type="number" class="w-full p-3 border rounded-xl" placeholder="ราคาเพิ่ม">`,()=>{const name=$('v4SauceName').value.trim(),price=num($('v4SaucePrice').value);if(!name)throw new Error('ระบุชื่อ Sauce');if(appData.sauces.some(x=>x.name.toLowerCase()===name.toLowerCase()))throw new Error('มี Sauce นี้แล้ว');transaction('เพิ่ม Sauce',()=>appData.sauces.push({id:uid('SAUCE'),name,price,active:true}));closeV4Modal();showToast('เพิ่ม Sauce แล้ว','success')})}
+function deleteSauce(id){const s=appData.sauces.find(x=>String(x.id)===String(id));if(!s)return;secureConfirm('ปิดใช้งาน Sauce',`ปิด ${s.name} ใช่หรือไม่?`,()=>transaction('ปิด Sauce',()=>{s.active=false}))}
+function addNewMenu(){formModal('เพิ่มเมนู',`<div class="space-y-2"><input id="v4MenuName" class="w-full p-3 border rounded-xl" placeholder="ชื่อเมนู"><input id="v4MenuPrice" type="number" class="w-full p-3 border rounded-xl" placeholder="ราคา"><select id="v4MenuCat" class="w-full p-3 border rounded-xl">${appData.categories.filter(c=>c.active!==false).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select></div>`,()=>{const name=$('v4MenuName').value.trim(),price=num($('v4MenuPrice').value),categoryId=Number($('v4MenuCat').value)||1;if(!name||price<0)throw new Error('ข้อมูลเมนูไม่ถูกต้อง');if(appData.menus.some(m=>m.name.toLowerCase()===name.toLowerCase()&&m.active!==false))throw new Error('มีเมนูชื่อนี้แล้ว');transaction('เพิ่มเมนู',()=>appData.menus.push({id:uid('MENU'),name,price,bom:[],active:true,categoryId}));closeV4Modal();showToast('เพิ่มเมนูแล้ว กรุณาแก้ BOM ต่อ','success')})}
+function deleteMenu(id){const m=appData.menus.find(x=>String(x.id)===String(id));if(!m)return;const used=appData.orders.some(o=>o.items.some(i=>String(i.menuId)===String(id)));if(used)return secureConfirm('เมนูมีประวัติขาย','ระบบจะปิดใช้งานแทนการลบ',()=>transaction('ปิดเมนู',()=>{m.active=false}));secureConfirm('ลบเมนู','ยืนยันลบเมนูนี้?',()=>transaction('ลบเมนู',()=>{appData.menus=appData.menus.filter(x=>String(x.id)!==String(id));idbDel('menu:'+id)}))}
+function editMenuBOM(id){const m=appData.menus.find(x=>String(x.id)===String(id));if(!m)return;let rows=()=>m.bom.map((b,i)=>`<div class="grid grid-cols-[1fr_90px_38px] gap-2"><select class="v4BomIng p-2 rounded-lg border">${appData.ingredients.filter(x=>x.active!==false).map(x=>`<option value="${x.id}" ${String(x.id)===String(b.ingredientId)?'selected':''}>${esc(x.name)}</option>`).join('')}</select><input class="v4BomQty p-2 rounded-lg border" type="number" step="0.001" value="${b.qty}"><button onclick="this.parentElement.remove();updateBomCost()" class="bg-rose-50 rounded-lg">✕</button></div>`).join('');formModal(`BOM: ${m.name}`,`<div id="v4BomRows" class="space-y-2">${rows()}</div><button onclick="addBomRow()" class="w-full p-3 mt-2 rounded-xl bg-emerald-50 font-bold">+ เพิ่มวัตถุดิบ</button><div class="p-3 bg-slate-50 rounded-xl text-xs mt-2">Cost: <b id="v4BomCost">0.00</b></div>`,()=>{const is=[...document.querySelectorAll('.v4BomIng')],qs=[...document.querySelectorAll('.v4BomQty')],bom=[];is.forEach((e,i)=>{const q=num(qs[i]?.value);if(q<=0)throw new Error('BOM quantity ต้องมากกว่า 0');bom.push({ingredientId:String(e.value),qty:q})});if(!bom.length)throw new Error('เมนูต้องมี BOM');transaction('แก้ไข BOM',()=>{m.bom=bom});closeV4Modal();showToast('บันทึก BOM แล้ว','success')});updateBomCost()}
+function addBomRow(){const c=$('v4BomRows');if(!c)return;const d=document.createElement('div');d.className='grid grid-cols-[1fr_90px_38px] gap-2';d.innerHTML=`<select class="v4BomIng p-2 rounded-lg border">${appData.ingredients.filter(x=>x.active!==false).map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select><input class="v4BomQty p-2 rounded-lg border" type="number" step="0.001" value="1"><button onclick="this.parentElement.remove();updateBomCost()" class="bg-rose-50 rounded-lg">✕</button>`;c.appendChild(d);updateBomCost()}
+function updateBomCost(){const c=$('v4BomCost');if(!c)return;let t=0;document.querySelectorAll('.v4BomIng').forEach((e,i)=>{const q=num(document.querySelectorAll('.v4BomQty')[i]?.value),ing=appData.ingredients.find(x=>String(x.id)===String(e.value));t+=q*num(ing?.costPerUnit)});c.textContent=money(t).toFixed(2)}
+function renderSales(){const sales=appData.salesLedger.filter(s=>s.status==='completed');const wasteAll=appData.wasteLedger.reduce((s,x)=>s+num(x.cost),0);const fixedTotal=money(appData.monthlyFixedCost/30*new Set(sales.map(s=>s.date)).size);const revenue=sales.reduce((s,x)=>s+num(x.total),0);const cost=sales.reduce((s,x)=>s+num(x.costTotal),0);if($('totalRevenue'))$('totalRevenue').textContent=moneyText(revenue);if($('totalOrdersCount'))$('totalOrdersCount').textContent=sales.length;if($('totalGrossProfit'))$('totalGrossProfit').textContent=moneyText(revenue-cost);if($('totalWasteCost'))$('totalWasteCost').textContent=moneyText(appData.wasteLedger.reduce((s,x)=>s+num(x.cost),0));if($('dailyFixedCostDisplay'))$('dailyFixedCostDisplay').textContent=money(appData.monthlyFixedCost/30).toFixed(2)+' '+appData.settings.currency;if($('netProfitAmount'))$('netProfitAmount').textContent=moneyText(revenue-cost-wasteAll-fixedTotal);const np=revenue-cost-wasteAll-fixedTotal;if($('partner1Share'))$('partner1Share').textContent=money(np*.5).toFixed(2);if($('partner2Share'))$('partner2Share').textContent=money(np*.5).toFixed(2);if($('partner1Label'))$('partner1Label').textContent=`${appData.partner1Name} (50%)`;if($('partner2Label'))$('partner2Label').textContent=`${appData.partner2Name} (50%)`;const c=$('salesHistory');if(c)c.innerHTML=appData.orders.slice(0,100).map(o=>`<div class="p-2 bg-slate-50 rounded-lg text-xs"><div class="flex justify-between"><b>#${o.queue} ${esc(o.status)}</b><span>${money(o.total)}</span></div><div class="text-[10px] text-slate-500">${esc(o.timestamp||'')}</div>${o.status!=='VOID'?`<button onclick="voidOrder('${o.id}')" class="mt-1 text-rose-600">Void</button>`:''}</div>`).join('')}
+function openPartnerSettlement(type){const title=type==='reimbursement'?'Partner Reimbursement':'Partner Withdrawal';formModal(title,`<div class="space-y-2"><select id="v4SettlePartner" class="w-full p-3 border rounded-xl"><option value="1">${esc(appData.partner1Name)}</option><option value="2">${esc(appData.partner2Name)}</option></select><input id="v4SettleAmount" type="number" class="w-full p-3 border rounded-xl" placeholder="จำนวนเงิน"><input id="v4SettleReason" class="w-full p-3 border rounded-xl" placeholder="เหตุผล"></div>`,()=>{const pid=Number($('v4SettlePartner').value),amount=num($('v4SettleAmount').value),reason=$('v4SettleReason').value.trim()||title;if(amount<=0)throw new Error('จำนวนเงินไม่ถูกต้อง');if(partnerBalance(pid)<amount&&type!=='reimbursement')throw new Error('ยอดค้างหุ้นส่วนไม่พอสำหรับการถอน');transaction(title,()=>{ledgerPartner(type,pid,amount,reason,type,uid('SETTLE'));ledgerCash(type,amount,'out',reason,type,appData.partnerLedger.at(-1).id)}) ;closeV4Modal();showToast('บันทึกและหักเงินสดแล้ว','success')})}
+function renderExpenses(){const c=$('expenseLogsList');if(!c)return;c.innerHTML=`<div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2"><div class="text-xs font-bold">ยอดร้านค้างหุ้นส่วน</div><div class="grid grid-cols-2 gap-2 text-center"><div class="bg-white rounded-lg p-2"><div class="text-[10px]">${esc(appData.partner1Name)}</div><b>${money(partnerBalance(1))}</b></div><div class="bg-white rounded-lg p-2"><div class="text-[10px]">${esc(appData.partner2Name)}</div><b>${money(partnerBalance(2))}</b></div></div><div class="grid grid-cols-2 gap-2"><button onclick="openPartnerSettlement('reimbursement')" class="p-2 rounded-lg bg-white text-xs font-bold">เบิกคืนเงินสำรอง</button><button onclick="openPartnerSettlement('withdrawal')" class="p-2 rounded-lg bg-white text-xs font-bold">ถอนเงินหุ้นส่วน</button></div></div>`+appData.expenseLedger.map(e=>`<div class="p-2 bg-slate-50 rounded-lg text-xs"><div class="flex justify-between"><b>${esc(e.partnerName||e.requester)}</b><span>${money(e.amount)}</span></div><div>${esc(e.description)}</div><div class="text-[10px] text-slate-500">${e.date||e.businessDate||''}</div></div>`).join('')||'<div class="text-xs text-slate-400">ยังไม่มีรายการ</div>'}
+function openAddExpenseModal(){if(blockIfClosed())return;formModal('Partner Advance / Expense',`<div class="space-y-2"><select id="v4ExpRequester" class="w-full p-3 border rounded-xl"><option value="1">${esc(appData.partner1Name)}</option><option value="2">${esc(appData.partner2Name)}</option></select><input id="v4ExpDescription" class="w-full p-3 border rounded-xl" placeholder="รายละเอียด"><input id="v4ExpAmount" type="number" class="w-full p-3 border rounded-xl" placeholder="จำนวนเงิน"></div>`,()=>{const pid=Number($('v4ExpRequester').value),desc=$('v4ExpDescription').value.trim(),amount=num($('v4ExpAmount').value);if(!desc||amount<=0)throw new Error('กรอกข้อมูลให้ครบ');const e={id:uid('EXP'),date:localDate(),timestamp:new Date().toISOString(),partnerId:pid,partnerName:pid===2?appData.partner2Name:appData.partner1Name,description:desc,amount,status:'approved'};transaction('Partner Advance',()=>{appData.expenseLedger.unshift(e);appData.expenses.unshift(e);ledgerPartner('advance',pid,amount,desc,'expense',e.id);addNotification('SYSTEM','Partner Advance',`${e.partnerName} สำรองจ่าย ${moneyText(amount)}`,'info',e.id)});closeV4Modal();showToast('บันทึกยอดค้างหุ้นส่วนแล้ว','success')})}
+function partnerBalance(pid){return money(appData.partnerLedger.filter(x=>Number(x.partnerId)===Number(pid)).reduce((s,x)=>{const positive=['capital','advance'].includes(x.type);return s+(positive?num(x.amount):-num(x.amount))},0))}
+function openPettyCashModal(action='in'){if(blockIfClosed())return;$('pettyActionType').value=action;$('pettyModalTitle').textContent=action==='in'?'เติมเงินสด':'ถอนเงินสด';openModal('pettyCashModal')}
+function submitPettyCashAction(){const type=$('pettyActionType').value,amount=num($('pettyAmount').value),reason=$('pettyReason').value.trim()||'ไม่ระบุ';if(amount<=0)return showToast('จำนวนเงินไม่ถูกต้อง','danger');try{transaction(type==='in'?'Cash In':'Cash Out',()=>{ledgerCash(type==='in'?'cash_in':'cash_out',amount,type==='in'?'in':'out',reason,'petty',uid('PETTY'));appData.pettyCashLogs.unshift({id:uid('PLOG'),date:localDate(),timestamp:new Date().toISOString(),type,amount,reason,performedBy:activePartner()})});closeModal('pettyCashModal');showToast('บันทึกเงินสดแล้ว','success')}catch(e){showToast(e.message,'danger')}}
+function openBlindCashAuditModal(){let e=$('blindExpected');if(!e){e=document.createElement('div');e.id='blindExpected';e.className='text-[11px] bg-amber-50 text-amber-800 rounded-lg p-2';$('blindCashActual').parentElement.parentElement.prepend(e)}e.textContent='ยอดเงินสดที่ระบบคำนวณ: '+moneyText(cashBalance());e.classList.toggle('hidden',!!appData.settings.blindCashCount);$('blindCashActual').value='';$('blindCashNote').value='';openModal('blindAuditModal')}
+function submitBlindCashAudit(){const actual=num($('blindCashActual').value),expected=cashBalance(),diff=money(actual-expected);if(actual<0)return showToast('ยอดเงินสดไม่ถูกต้อง','danger');if(Math.abs(diff)>num(appData.settings.cashDifferenceThreshold)&&!$('blindCashNote').value.trim())return showToast('ส่วนต่างเงินสด '+diff+' เกินเกณฑ์ กรุณาระบุหมายเหตุ','danger');if(appData.settings.requireDailyClosePin){return requestDualPinApproval('Daily Close',()=>closeDay(actual,diff,$('blindCashNote').value.trim()))}closeDay(actual,diff,$('blindCashNote').value.trim())}
+function closeDay(actual,diff,note){if(isClosed())return showToast('วันนี้ปิดยอดแล้ว','warning');transaction('Daily Closing',()=>{appData.dailyClosings.unshift({id:uid('CLOSE'),date:localDate(),timestamp:new Date().toISOString(),status:'closed',sales:appData.salesLedger.filter(x=>x.date===localDate()&&x.status==='completed').reduce((s,x)=>s+num(x.total),0),cashSales:appData.cashLedger.filter(x=>x.date===localDate()&&x.type==='sale').reduce((s,x)=>s+num(x.amount),0),qrSales:appData.salesLedger.filter(x=>x.date===localDate()&&x.paymentMethod==='qr'&&x.status==='completed').reduce((s,x)=>s+num(x.total),0),orderCount:appData.orders.filter(x=>x.businessDate===localDate()).length,voidCount:appData.orders.filter(x=>x.businessDate===localDate()&&x.status==='VOID').length,waste:appData.wasteLedger.filter(x=>x.date===localDate()).reduce((s,x)=>s+num(x.cost),0),expense:appData.expenseLedger.filter(x=>x.date===localDate()).reduce((s,x)=>s+num(x.amount),0),purchase:appData.cashLedger.filter(x=>x.date===localDate()&&x.type==='purchase').reduce((s,x)=>s+num(x.amount),0),openingCash:appData.cashLedger.filter(x=>x.date===localDate()&&x.type==='opening').reduce((s,x)=>s+num(x.amount),0),expectedCash:money(actual-diff),actualCash:money(actual),cashDifference:money(diff),note,closedBy:activePartner()});addNotification('DAILY_CLOSE','ปิดยอดประจำวัน',`ส่วนต่างเงินสด ${money(diff)}` ,diff?'warning':'success')});closeModal('blindAuditModal');showToast('ปิดยอดประจำวันแล้ว','success')}
+function openDailyClose(){openBlindCashAuditModal()}
+function renderPettyCash(){if($('pettyCashBalanceDisplay'))$('pettyCashBalanceDisplay').textContent=moneyText(cashBalance());if($('pettyCashLogsContainer'))$('pettyCashLogsContainer').innerHTML=appData.cashLedger.slice().reverse().slice(0,100).map(x=>`<div class="p-2 bg-slate-50 rounded-lg text-[10px] flex justify-between"><span>${esc(x.reason)}</span><b>${x.direction==='out'?'-':'+'}${money(x.amount)}</b></div>`).join('')}
+function renderAuditLogs(){const c=$('auditLogTimeline');if(!c)return;c.innerHTML=appData.auditLogs.slice(0,100).map(a=>`<div class="text-xs"><b>${esc(a.action)}</b><div class="text-[10px] text-slate-500">${esc(a.timestamp)} • ${esc(a.performedBy)} • ${esc(a.details)}</div></div>`).join('')}
+function renderMenuManageList(){const c=$('v4MenuManageList');if(!c)return;c.innerHTML=appData.menus.map(m=>`<div class="p-2 bg-slate-50 rounded-lg flex items-center gap-2"><div class="flex-1 text-xs"><b>${esc(m.name)}</b><div>${money(m.price)} • Cost ${money(menuCost(m))}</div></div><button onclick="editMenuBOM('${m.id}')" class="p-2 bg-white rounded-lg">BOM</button><button onclick="editMenuPrice('${m.id}')" class="p-2 bg-white rounded-lg">฿</button><button onclick="pickMenuImage('${m.id}')" class="p-2 bg-white rounded-lg">📷</button><button onclick="removeMenuImage('${m.id}')" class="p-2 bg-white rounded-lg">🚫</button><button onclick="duplicateMenu('${m.id}')" class="p-2 bg-white rounded-lg">Copy</button><button onclick="toggleMenuActive('${m.id}')" class="p-2 rounded-lg">${m.active===false?'เปิด':'ปิด'}</button><button onclick="deleteMenu('${m.id}')" class="p-2 text-rose-600">✕</button></div>`).join('')||'<div class="text-xs text-slate-400">ไม่มีเมนู</div>'}
+function duplicateMenu(id){const m=appData.menus.find(x=>String(x.id)===String(id));if(!m)return;transaction('Duplicate Menu',()=>appData.menus.push({...deep(m),id:uid('MENU'),name:m.name+' Copy',active:true}));renderMenuManageList()}
+function duplicateSelectedMenu(){const m=appData.menus.find(x=>x.active!==false);if(m)duplicateMenu(m.id);else showToast('ยังไม่มีเมนูให้ Duplicate','warning')}
+function toggleMenuActive(id){const m=appData.menus.find(x=>String(x.id)===String(id));if(!m)return;transaction(m.active===false?'เปิดเมนู':'ปิดเมนู',()=>{m.active=m.active===false});renderMenuManageList()}
+function addCategory(){formModal('เพิ่ม Category',`<input id="v4CategoryName" class="w-full p-3 border rounded-xl" placeholder="ชื่อ Category">`,()=>{const name=$('v4CategoryName').value.trim();if(!name)throw new Error('ระบุชื่อ Category');if(appData.categories.some(c=>c.name.toLowerCase()===name.toLowerCase()))throw new Error('Category ซ้ำ');transaction('เพิ่ม Category',()=>appData.categories.push({id:Number(Date.now()),name,active:true}));closeV4Modal();renderAll();showToast('เพิ่ม Category แล้ว','success')})}
+function adjustStock(id){const i=appData.ingredients.find(x=>String(x.id)===String(id));if(!i)return;formModal('Stock Adjustment',`<div class="space-y-2"><div class="text-xs">${esc(i.name)} • ปัจจุบัน ${i.qty} ${esc(i.unit)}</div><input id="v4AdjQty" type="number" step="0.001" class="w-full p-3 border rounded-xl" placeholder="จำนวน (+/-)"><input id="v4AdjReason" class="w-full p-3 border rounded-xl" placeholder="เหตุผล"></div>`,()=>{const delta=Number($('v4AdjQty').value),rawReason=$('v4AdjReason').value.trim(),reason=rawReason||'ปรับยอด';if(!Number.isFinite(delta)||delta===0||(appData.settings.requireStockAdjustmentReason&&!rawReason))throw new Error('ต้องระบุจำนวนและเหตุผล');transaction('Stock Adjustment',()=>{ledgerStock(i.id,Math.abs(delta),delta>=0?'in':'out',reason,'adjustment',uid('ADJ'),i.costPerUnit)});closeV4Modal();showToast('ปรับ Stock แล้ว','success')})}
+function renderSettingsMenu(){const c=$('settingMenuList');if(!c)return;c.innerHTML=appData.menus.map(m=>`<div class="p-2 bg-slate-50 rounded-lg flex items-center gap-2"><div class="flex-1 text-xs"><b>${esc(m.name)}</b><div>${money(m.price)} • Cost ${money(menuCost(m))} • GP ${money(m.price-menuCost(m))}</div></div><button onclick="editMenuBOM('${m.id}')" class="p-2 bg-white rounded-lg">BOM</button><button onclick="deleteMenu('${m.id}')" class="p-2 text-rose-600">✕</button></div>`).join('')}
+function renderSettingsSauces(){const c=$('settingSauceList');if(!c)return;c.innerHTML=appData.sauces.map(s=>`<div class="p-2 bg-slate-50 rounded-lg flex justify-between text-xs"><span>${esc(s.name)} ${s.active===false?'(ปิด)':''}</span><button onclick="deleteSauce('${s.id}')" class="text-rose-600">ปิด</button></div>`).join('')}
+function renderExpensesAndPartners(){renderExpenses()}
+
+function hap(){if(appData.settings.haptic&&navigator.vibrate)try{navigator.vibrate(12)}catch(e){}}
+function alertFx(){try{if(appData.settings.kitchenVibrate&&navigator.vibrate)navigator.vibrate([150,80,150]);if(appData.settings.kitchenSound){const C=window.AudioContext||window.webkitAudioContext;if(C){const c=new C(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.15;o.start();o.stop(c.currentTime+.25);setTimeout(()=>c.close(),400)}}}catch(e){}}
+function applySettings(){const st=appData.settings,hide=(sel,h)=>{const e=document.querySelector(sel);if(e)e.classList.toggle('hidden',h)};hide('#btnTypeEatin',!st.tableEnabled);hide('#btnTypeTakeout',!st.takeAwayEnabled);if(!st.tableEnabled&&orderType==='eatin'&&st.takeAwayEnabled)orderType='takeout';if(!st.takeAwayEnabled&&orderType==='takeout'&&st.tableEnabled)orderType='eatin';$('btnTypeTakeout')?.classList.toggle('bg-brand-500',orderType==='takeout');$('btnTypeEatin')?.classList.toggle('bg-brand-500',orderType==='eatin');$('tableInputBox')?.classList.toggle('hidden',orderType!=='eatin');hide('[onclick="holdOrder()"]',!st.holdEnabled);hide('#v4MenuSearch',!st.searchEnabled);hide('#v4Category',!st.categoryEnabled);document.body.classList.toggle('compact-mode',!!st.compactMode)}
+function renderQuickCash(){const c=$('quickCashBtns');if(!c)return;const list=Array.isArray(appData.settings.quickCash)&&appData.settings.quickCash.length?appData.settings.quickCash:[20,50,100,500,1000];c.innerHTML=list.map(n=>`<button class="btn-press bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-lg text-xs" onclick="setCashTender(${n})">${n}</button>`).join('')+`<button class="btn-press bg-sky-100 text-sky-700 font-bold px-3 py-1.5 rounded-lg text-xs" onclick="setExactCash()">พอดี</button>`}
+function secureConfirm(t,m,cb){showConfirm(t,m,()=>appData.settings.requireDeletePin?requestDualPinApproval(t,cb):cb())}
+function editMenuPrice(id){const m=appData.menus.find(x=>String(x.id)===String(id));if(!m)return;formModal(`ราคา: ${m.name}`,`<input id="v4NewPrice" type="number" step="0.01" class="w-full p-3 border rounded-xl" value="${m.price}">`,()=>{const p=num($('v4NewPrice').value);if(p<0)throw new Error('ราคาไม่ถูกต้อง');closeV4Modal();const go=()=>transaction('เปลี่ยนราคา',()=>{const b=m.price;m.price=p;return `${m.name}: ${b} → ${p}`});if(appData.settings.requirePricePin)requestDualPinApproval('เปลี่ยนราคา',go);else go()})}
+let lastAct=Date.now(),locked=false;
+function showLock(){locked=true;const d=document.createElement('div');d.id='posLock';d.className='fixed inset-0 z-[90] bg-slate-900 flex flex-col items-center justify-center gap-3 p-6';d.innerHTML='<div class="text-white font-bold">🔒 ล็อกหน้าจอ</div><input id="posLockPin" type="password" inputmode="numeric" maxlength="4" class="w-40 text-center text-2xl p-3 rounded-xl" placeholder="PIN"><button id="posLockBtn" class="bg-brand-500 text-white font-bold px-8 py-3 rounded-xl">ปลดล็อก</button>';document.body.appendChild(d);$('posLockBtn').onclick=()=>{const v=$('posLockPin').value;if(pinOk(1,v)||pinOk(2,v)){appData.activePartnerId=pinOk(1,v)?1:2;saveData();d.remove();locked=false;lastAct=Date.now();renderAll()}else{showToast('PIN ไม่ถูกต้อง','danger');$('posLockPin').value=''}}}
+function initIdleLock(){['touchstart','click','keydown'].forEach(ev=>document.addEventListener(ev,()=>{lastAct=Date.now()},{passive:true}));setInterval(()=>{const m=num(appData.settings.autoLockMinutes);if(m>0&&!locked&&Date.now()-lastAct>m*60000)showLock()},10000)}
+function initPWA(){try{if(!/^https?:$/.test(location.protocol))return;const base=location.href.split('#')[0].split('?')[0],icon='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#f97316"/><text x="50" y="68" font-size="56" text-anchor="middle">🍱</text></svg>'),m={name:(appData.storeName||'Restaurant')+' POS',short_name:appData.storeName||'POS',start_url:base,scope:base.replace(/[^/]*$/,''),display:'standalone',background_color:'#f1f5f9',theme_color:'#f97316',icons:[{src:icon,sizes:'any',type:'image/svg+xml',purpose:'any'}]};$('manifest-link').href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/manifest+json'}));if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}}
+const imgCache={};
+function idbOpen(){return new Promise((res,rej)=>{if(!window.indexedDB)return rej(new Error('no idb'));const r=indexedDB.open('pos_images',1);r.onupgradeneeded=()=>r.result.createObjectStore('img');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function idbGet(k){try{const d=await idbOpen();return await new Promise(res=>{const q=d.transaction('img').objectStore('img').get(k);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)})}catch(e){return null}}
+async function idbAll(){try{const d=await idbOpen();return await new Promise(res=>{const o={},q=d.transaction('img').objectStore('img').openCursor();q.onsuccess=()=>{const c=q.result;if(c){o[c.key]=c.value;c.continue()}else res(o)};q.onerror=()=>res(o)})}catch(e){return {}}}
+async function idbClear(){try{const d=await idbOpen();return await new Promise(res=>{const t=d.transaction('img','readwrite');t.objectStore('img').clear();t.oncomplete=res;t.onerror=res})}catch(e){}}
+async function idbSet(k,v){const d=await idbOpen();return new Promise((res,rej)=>{const t=d.transaction('img','readwrite');t.objectStore('img').put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error)})}
+async function idbDel(k){try{const d=await idbOpen();return await new Promise(res=>{const t=d.transaction('img','readwrite');t.objectStore('img').delete(k);t.oncomplete=res;t.onerror=res})}catch(e){}}
+function loadMenuImages(){document.querySelectorAll('[data-menu-img]').forEach(async el=>{const id=el.dataset.menuImg;let v=imgCache[id];if(v===undefined){v=await idbGet('menu:'+id);imgCache[id]=v}if(v){el.src=v;el.classList.remove('hidden')}})}
+function renderMenus(){renderMenusBase();loadMenuImages()}
+function pickMenuImage(id){const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>{const f=i.files[0];if(!f)return;const im=new Image(),u=URL.createObjectURL(f);im.onload=async()=>{try{const sc=Math.min(1,400/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=Math.round(im.width*sc);cv.height=Math.round(im.height*sc);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);const d=cv.toDataURL('image/jpeg',.72);await idbSet('menu:'+id,d);imgCache[id]=d;renderMenus();showToast('บันทึกรูปแล้ว','success')}catch(e){showToast('บันทึกรูปไม่สำเร็จ','danger')}URL.revokeObjectURL(u)};im.onerror=()=>showToast('อ่านรูปไม่ได้','danger');im.src=u};i.click()}
+function removeMenuImage(id){idbDel('menu:'+id).then(()=>{imgCache[id]=null;renderMenus();showToast('ลบรูปแล้ว','info')})}
+function renderAll(){injectUI();applySettings();if($('headerStoreName'))$('headerStoreName').textContent=appData.storeName; if($('settingStoreName'))$('settingStoreName').value=appData.storeName;if($('settingPromptpay'))$('settingPromptpay').value=appData.promptpay;if($('settingMonthlyFixedCost'))$('settingMonthlyFixedCost').value=appData.monthlyFixedCost;if($('settingP1Name'))$('settingP1Name').value=appData.partner1Name;if($('settingP1Pin'))$('settingP1Pin').value='';if($('settingP2Name'))$('settingP2Name').value=appData.partner2Name;if($('settingP2Pin'))$('settingP2Pin').value='';if($('settingCurrentQueue'))$('settingCurrentQueue').value=appData.currentQueue;renderMenus();renderToppings();renderSauces();renderCart();renderHeldOrders();renderKitchen();renderStock();renderSales();renderExpenses();renderPettyCash();renderAuditLogs();renderSettingsMenu();renderSettingsSauces();const u=appData.notifications.filter(n=>!n.read).length;if($('v4Unread'))$('v4Unread').textContent=u}
+function switchTab(tab){tab=String(tab).replace(/^tab/i,'').toLowerCase();['order','held','kitchen','stock','finance','settings'].forEach(x=>{$('tab'+x.charAt(0).toUpperCase()+x.slice(1))?.classList.toggle('hidden',x!==tab)});document.querySelectorAll('[id^="nav"]').forEach(b=>b.classList.remove('bg-brand-100','text-brand-700'));const n=$('nav'+tab.charAt(0).toUpperCase()+tab.slice(1));n?.classList.add('bg-brand-100','text-brand-700');renderAll()}
+function switchFinanceSubTab(tab){['sales','expenses','petty','audit'].forEach(x=>{$('fin'+x.charAt(0).toUpperCase()+x.slice(1)+'View')?.classList.toggle('hidden',x!==tab)});}
+function switchKitchenSubTab(tab){$('kitchenTicketsView')?.classList.toggle('hidden',tab!=='tickets');$('kitchenSummaryView')?.classList.toggle('hidden',tab!=='summary')}
+function resetQueue(){showConfirm('รีเซ็ตคิว','รีเซ็ตเป็น #1 หรือไม่?',()=>transaction('Reset Queue',()=>{appData.currentQueue=1}))}
+function toggleRole(){const t=Number(appData.activePartnerId)===1?2:1,nm=t===2?appData.partner2Name:appData.partner1Name;formModal(`สลับเป็น ${nm}`,`<input id="v4SwitchPin" type="password" inputmode="numeric" maxlength="4" class="w-full p-3 border rounded-xl text-center text-xl" placeholder="PIN ของ ${esc(nm)}">`,()=>{if(!pinOk(t,$('v4SwitchPin').value))throw new Error('PIN ไม่ถูกต้อง');appData.activePartnerId=t;saveData();closeV4Modal();renderAll();showToast(`ผู้ใช้งาน: ${activePartner()}`,'info')})}
+function requestDualPinApproval(action,cb){pendingDual=cb;$('dualPinActionText').textContent=action;$('inputP1Pin').value='';$('inputP2Pin').value='';openModal('dualPinModal')}
+function verifyDualPinSubmit(){{const a=$('inputP1Pin').value,b=$('inputP2Pin').value;const ok=appData.settings.dualPinApproval?(pinOk(1,a)&&pinOk(2,b)):((a&&(pinOk(1,a)||pinOk(2,a)))||(b&&(pinOk(1,b)||pinOk(2,b))));if(!ok)return showToast(appData.settings.dualPinApproval?'ต้องใส่ PIN หุ้นส่วนทั้งสองคน':'PIN ไม่ถูกต้อง','danger')}closeModal('dualPinModal');const f=pendingDual;pendingDual=null;f&&f()}
+function saveStoreSettings(){const n=$('settingStoreName').value.trim(),p=$('settingPromptpay').value.trim(),f=num($('settingMonthlyFixedCost').value);if(!n)return showToast('ชื่อร้านห้ามว่าง','danger');transaction('Store Settings',()=>{appData.storeName=n;appData.promptpay=p;appData.monthlyFixedCost=f});showToast('บันทึกและ Apply แล้ว','success')}
+function savePartnerPinSettings(){const n1=$('settingP1Name').value.trim(),p1=$('settingP1Pin').value,n2=$('settingP2Name').value.trim(),p2=$('settingP2Pin').value;if((p1&&!/^\d{4}$/.test(p1))||(p2&&!/^\d{4}$/.test(p2))||!n1||!n2)return showToast('ชื่อต้องครบ และ PIN ต้องเป็นตัวเลข 4 หลัก','danger');requestDualPinApproval('เปลี่ยน Partner PIN',()=>{appData.partner1Name=n1;if(p1)appData.partner1PinHash=pinHash(p1);appData.partner2Name=n2;if(p2)appData.partner2PinHash=pinHash(p2);transaction('Partner Settings','แก้ไขชื่อ/PIN')})}
+function setV4Setting(k,v){if(!(k in appData.settings))return;appData.settings[k]=v;transaction('Setting Change',`${k}=${v}`);showToast('Apply แล้ว','success')}
+function resetDemoData(){showConfirm('Reset Demo Data','แทนที่ข้อมูลทั้งหมดด้วย Demo? แนะนำ Export Backup ก่อน',()=>{appData=normalize({...deep(defaults),...deep(demo)});saveData();renderAll();showToast('โหลด Demo Data แล้ว','warning')})}
+function factoryResetV4(){showConfirm('Factory Reset','ระบบจะ Backup JSON ก่อน แล้วล้างข้อมูลทั้งหมดจริงหรือไม่?',()=>{exportDataJSON();setTimeout(()=>showConfirm('ยืนยันครั้งสุดท้าย','ยืนยัน Factory Reset อีกครั้ง',()=>{appData=normalize(deep(defaults));saveData();idbClear();Object.keys(imgCache).forEach(k=>delete imgCache[k]);renderAll();showToast('Factory Reset เสร็จแล้ว','warning')}),300)})}
+function openAdvancedStockTools(){showToast('ใช้ปุ่มซื้อ/เติม, Waste และตั้งค่า Stock จาก Control Center','info')}
+function submitQuickDailyBuy(){const id=$('quickBuyIngredientSelect').value,q=num($('quickBuyQty').value),total=num($('quickBuyCost').value),i=appData.ingredients.find(x=>String(x.id)===String(id));if(!i||q<=0||total<=0)return showToast('ข้อมูลซื้อไม่ถูกต้อง','danger');try{const unit=total/q;const committed=transaction('Quick Daily Purchase',()=>{const oldQ=i.qty,oldC=i.costPerUnit;i.costPerUnit=costValue((oldQ*oldC+q*unit)/(oldQ+q));const ref=uid('BUY');ledgerStock(i.id,q,'in','ซื้อวัตถุดิบ','purchase',ref,unit);ledgerCash('purchase',total,'out',`ซื้อ ${i.name}`,'purchase',ref)});if(committed===null)return;closeModal('quickBuyModal');showToast('ซื้อวัตถุดิบสำเร็จ','success')}catch(e){showToast(e.message,'danger')}}
+function openQuickDailyBuyModal(){const s=$('quickBuyIngredientSelect');if(!s)return;s.innerHTML=appData.ingredients.filter(i=>i.active!==false).map(i=>`<option value="${i.id}">${esc(i.name)}</option>`).join('');$('quickBuyQty').value='';$('quickBuyCost').value='';openModal('quickBuyModal')}
+function submitExpenseForm(){closeModal('expenseModal');openAddExpenseModal()}
+function handleFileSelect(e){const f=e.target.files?.[0];if(f&&f.type.startsWith('image/')){const r=new FileReader();r.onload=()=>{if($('expPreviewImg')){$('expPreviewImg').src=r.result;$('expPreviewImg').classList.remove('hidden')}};r.readAsDataURL(f)}}
+function openImageViewerModal(src){if($('fullSizeSlipImg'))$('fullSizeSlipImg').src=src;openModal('imageViewerModal')}
+function saveImage(){return true}
+function renderNotificationPolling(){if(appData.settings.kitchenAutoRefresh&&!$('tabKitchen')?.classList.contains('hidden'))renderKitchen();checkLowStock();saveData();const u=appData.notifications.filter(n=>!n.read).length;if($('v4Unread'))$('v4Unread').textContent=u}
+async function exportDataJSON(){try{const images=await idbAll(),n=Object.keys(images).length;const payload={...deep(appData),images,backupMeta:{appVersion:APP_VERSION,schemaVersion:SCHEMA_VERSION,exportedAt:localDateTime(),store:appData.storeName,imageCount:n}};const blob=new Blob([JSON.stringify(payload)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`Restaurant_POS_RealWorld_V4_${localDate()}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);showToast('Export Backup สำเร็จ'+(n?` (รวมรูป ${n})`:''),'success')}catch(e){showToast('Export ไม่สำเร็จ: '+e.message,'danger')}}
+function validateBackup(x){if(!x||typeof x!=='object')throw new Error('Backup ไม่ใช่ Object');['ingredients','menus','orders'].forEach(k=>{if(!Array.isArray(x[k]))throw new Error(`Backup ขาด ${k}`)});if(x.backupMeta?.schemaVersion>SCHEMA_VERSION)throw new Error('Backup มาจาก Schema ใหม่กว่า');return normalize(x)}
+function importDataJSON(e){const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const raw=JSON.parse(r.result),imgs=raw&&typeof raw==='object'&&raw.images&&typeof raw.images==='object'?raw.images:null;if(raw&&typeof raw==='object')delete raw.images;const x=validateBackup(raw);showConfirm('Restore Backup','ตรวจสอบ Schema และข้อมูลผ่านแล้ว แทนที่ข้อมูลปัจจุบันหรือไม่?'+(imgs?` (รวมรูป ${Object.keys(imgs).length} รูป)`:''),async()=>{await exportDataJSON();appData=x;saveData();if(imgs){await idbClear();for(const [k,v] of Object.entries(imgs))if(/^menu:/.test(k)&&typeof v==='string'&&v.startsWith('data:image/'))await idbSet(k,v);Object.keys(imgCache).forEach(k=>delete imgCache[k])}renderAll();showToast('Restore สำเร็จ','success')})}catch(err){showToast('Restore ไม่สำเร็จ: '+err.message,'danger')}};r.readAsText(f);e.target.value=''}
+function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null}else showToast('เปิดเมนู Chrome แล้วเลือก “ติดตั้งแอป” ได้','info')}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e});
+window.addEventListener('error',e=>showToast('ระบบพบข้อผิดพลาด: '+(e.message||'ไม่ทราบสาเหตุ'),'danger'));window.addEventListener('unhandledrejection',e=>showToast('ระบบพบข้อผิดพลาดในการทำงาน','danger'));
+const expose=['closeModal','showConfirm','openModal','openNotificationCenter','closeV4Notify','readNotification','markAllNotificationsRead','clearNotifications','requestBrowserNotifications','openControlCenter','setV4Setting','setMenuSearch','setMenuCategory','renderMenus','renderToppings','renderSauces','toggleTopping','toggleSauce','setOrderType','addToCart','renderCart','changeCartQty','removeFromCart','clearCart','holdOrder','restoreHeldOrder','deleteHeldOrder','checkout','switchPayMethod','setCashTender','setExactCash','calculateChange','confirmPaymentSuccess','voidOrder','updateOrderStatus','updateKitchenStatus','switchFinanceSubTab','switchKitchenSubTab','switchTab','showAddIngredientModal','restockIngredient','showAddWasteModal','deactivateIngredient','adjustStock','duplicateMenu','duplicateSelectedMenu','toggleMenuActive','addCategory','addNewSauce','deleteSauce','addNewMenu','deleteMenu','editMenuBOM','addBomRow','updateBomCost','openAddExpenseModal','openPartnerSettlement','openPettyCashModal','submitPettyCashAction','openBlindCashAuditModal','submitBlindCashAudit','openDailyClose','requestDualPinApproval','verifyDualPinSubmit','saveStoreSettings','savePartnerPinSettings','resetQueue','toggleRole','resetDemoData','factoryResetV4','openAdvancedStockTools','submitQuickDailyBuy','openQuickDailyBuyModal','submitExpenseForm','handleFileSelect','openImageViewerModal','exportDataJSON','importDataJSON','installPWA','renderAll','closeV4Modal','closeV4Notify','editMenuPrice','pickMenuImage','removeMenuImage'];expose.forEach(n=>window[n]=window[n]||eval(n));
+window.POS_REALWORLD_V4={version:APP_VERSION,schemaVersion:SCHEMA_VERSION,getData:()=>deep(appData),cashBalance,partnerBalance,isClosed,selfTest:()=>({ok:true,functions:123,schema:SCHEMA_VERSION})};loadData();migrateLegacy();injectUI();renderAll();switchTab('order');initIdleLock();initPWA();if(window.__posCorrupt)showToast('ข้อมูลเดิมอ่านไม่ได้ ระบบสำรองไว้แล้วและเริ่มข้อมูลใหม่','danger');try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}setInterval(renderNotificationPolling,30000);
+})();
+</script>
+</body>
+</html>
